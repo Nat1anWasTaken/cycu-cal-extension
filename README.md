@@ -2,6 +2,7 @@
 
 A Chrome/Brave extension that replaces the code editor on [CYCU CAL](https://cycu-cal.tw) with
 [Monaco](https://microsoft.github.io/monaco-editor/) and full C language support, running entirely in your browser.
+It also works on CAL servers hosted on other domains or the LAN (any page under `/cal/topic/`).
 
 ## Features
 
