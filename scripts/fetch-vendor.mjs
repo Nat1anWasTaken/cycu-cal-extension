@@ -6,7 +6,7 @@
 //   node scripts/fetch-vendor.mjs --print    # print hashes of what is on disk (for re-pinning)
 
 import { createHash } from 'node:crypto';
-import { createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -42,6 +42,23 @@ export const modelFile = (id) => ({
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
 
+const MAX_ATTEMPTS = 8;
+const partSize = (path) => (existsSync(path) ? statSync(path).size : 0);
+
+/** Downloads `url` into `tmp`, appending to an existing partial file when the server honours Range. Returns the expected total size (0 if unknown). */
+async function download(url, tmp) {
+  const have = partSize(tmp);
+  const res = await fetch(url, have ? { headers: { range: `bytes=${have}-` } } : {});
+  if (res.status === 416) return have; // the .part is already complete
+  if (!res.ok || !res.body) throw new Error(`${url}: HTTP ${res.status}`);
+  const resumed = res.status === 206;
+  // content-length is the encoded size when the response is compressed; only compare for identity encoding.
+  const encoded = (res.headers.get('content-encoding') ?? 'identity') !== 'identity';
+  const length = encoded ? 0 : Number(res.headers.get('content-length')) || 0;
+  await pipeline(Readable.fromWeb(res.body), createWriteStream(tmp, { flags: resumed ? 'a' : 'w' }));
+  return length && (resumed ? have + length : length);
+}
+
 async function fetchOne(file) {
   const abs = join(root, file.path);
   if (existsSync(abs) && sha256(readFileSync(abs)) === file.sha256) {
@@ -51,12 +68,17 @@ async function fetchOne(file) {
   mkdirSync(dirname(abs), { recursive: true });
   const tmp = `${abs}.part`;
   console.log(`↓ ${file.url}`);
-  const res = await fetch(file.url);
-  if (!res.ok || !res.body) throw new Error(`${file.url}: HTTP ${res.status}`);
-  // content-length is the encoded size when the response is compressed; only compare for identity encoding.
-  const encoded = (res.headers.get('content-encoding') ?? 'identity') !== 'identity';
-  const expected = encoded ? 0 : Number(res.headers.get('content-length')) || 0;
-  await pipeline(Readable.fromWeb(res.body), createWriteStream(tmp));
+  // Long downloads (the 1.5B model is ~1 GB) can be cut off mid-stream; resume the .part file with a Range request.
+  let expected = 0;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      expected = await download(file.url, tmp);
+      break;
+    } catch (e) {
+      if (attempt >= MAX_ATTEMPTS) throw e;
+      console.warn(`  ${e.code ?? e.message}; resuming from ${(partSize(tmp) / 1e6).toFixed(1)} MB (attempt ${attempt + 1}/${MAX_ATTEMPTS})`);
+    }
+  }
 
   const buf = readFileSync(tmp);
   if (expected && buf.length !== expected) throw new Error(`${file.path}: truncated (${buf.length}/${expected} bytes)`);
