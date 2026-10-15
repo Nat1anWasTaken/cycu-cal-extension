@@ -3,7 +3,6 @@ name: Build extension
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -15,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history and tags, so the release notes can list commits since the last release.
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -61,8 +63,28 @@ jobs:
           # The weights are already compressed; skip re-compressing ~400 MB.
           compression-level: 0
 
+      # Every push to main becomes a release tagged "<UTC date>-<short sha>", e.g. 2026-10-16-0754622.
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release/*.zip --generate-notes --title "$GITHUB_REF_NAME"
+        run: |
+          tag="$(date -u +%Y-%m-%d)-${GITHUB_SHA::7}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release $tag already exists, skipping"
+            exit 0
+          fi
+          prev="$(gh release list --limit 1 --exclude-drafts --json tagName --jq '.[0].tagName // empty')"
+          if [ -n "$prev" ] && git rev-parse -q --verify "$prev^{commit}" >/dev/null; then
+            range="$prev..$GITHUB_SHA"
+            echo "## Commits since $prev" > notes.md
+          else
+            range="$GITHUB_SHA"
+            echo "## Commits" > notes.md
+          fi
+          echo >> notes.md
+          git log --no-merges --format="- %h %s" "$range" >> notes.md
+          if [ -n "$prev" ]; then
+            printf '\n**Full diff**: %s/%s/compare/%s...%s\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$prev" "$tag" >> notes.md
+          fi
+          gh release create "$tag" release/*.zip --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md
