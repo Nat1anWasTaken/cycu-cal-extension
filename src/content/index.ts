@@ -6,7 +6,7 @@ import './content.css';
 import { createAceSync, type AceSync } from './ace-sync';
 import { applyEditorSettings, createEditor, createModel, getEditorWorkerState, monaco } from '../editor/monaco-setup';
 import { installLockGuard, isPositionLocked, type LockGuard } from '../editor/locks';
-import { createToolbar, type Toolbar } from '../editor/toolbar';
+import { createToolbar, type Toolbar, type ToolbarVisibility } from '../editor/toolbar';
 import { startLanguageFeatures, type LanguageFeatures } from '../lsp/index';
 import { startInlineCompletion, type InlineCompletion } from '../slm/inline-completion';
 import {
@@ -190,8 +190,12 @@ function mountSession(
 // Main
 // ---------------------------------------------------------------------------
 
-function badgeVisibility(s: Settings): { clangd: boolean; slm: boolean } {
-  return { clangd: s.showClangdBadge, slm: s.showSlmBadge && s.features.inlineCompletion };
+function toolbarVisibility(s: Settings): ToolbarVisibility {
+  return {
+    clangd: s.showClangdBadge,
+    slm: s.showSlmBadge && s.features.inlineCompletion,
+    format: s.showFormatButton && s.features.formatting,
+  };
 }
 
 async function main(): Promise<void> {
@@ -217,8 +221,16 @@ async function main(): Promise<void> {
       setMode(m, true);
       saveSettings({ useMonaco: m }).catch((err) => console.warn(LOG, 'cannot save settings', err));
     },
+    onFormat: () => {
+      if (!session) return;
+      session.editor.focus();
+      session.editor
+        .getAction('editor.action.formatDocument')
+        ?.run()
+        .catch((err) => console.warn(LOG, 'format failed', err));
+    },
   });
-  toolbar.setBadges(badgeVisibility(settings));
+  toolbar.setVisible(toolbarVisibility(settings));
 
   function setMode(m: boolean, userInitiated: boolean): void {
     if (m) {
@@ -283,7 +295,7 @@ async function main(): Promise<void> {
   onSettingsChanged((next) => {
     settings = next;
     if (next.useMonaco !== useMonaco) setMode(next.useMonaco, false);
-    toolbar.setBadges(badgeVisibility(next));
+    toolbar.setVisible(toolbarVisibility(next));
     if (session) {
       session.setTheme(next);
       try {

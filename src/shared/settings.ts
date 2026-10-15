@@ -46,6 +46,8 @@ export interface Settings {
   showClangdBadge: boolean;
   /** Show the local AI status badge in the page toolbar (only while inline completion is on). */
   showSlmBadge: boolean;
+  /** Show a "Format" button in the page toolbar (only while formatting is on). */
+  showFormatButton: boolean;
   slmModel: SlmModelId;
 }
 
@@ -72,6 +74,7 @@ export const DEFAULT_SETTINGS: Settings = {
   fontFamily: '',
   showClangdBadge: true,
   showSlmBadge: true,
+  showFormatButton: true,
   slmModel: 'qwen2.5-coder-0.5b',
 };
 

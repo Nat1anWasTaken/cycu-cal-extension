@@ -1,4 +1,4 @@
-// Extension options page: feature toggles, editor look, toolbar badges, SLM model and clangd compile flags.
+// Extension options page: feature toggles, editor look, toolbar controls, SLM model and clangd compile flags.
 // Every change is saved immediately; the toast in #status confirms it.
 
 import { isBundled } from '../shared/bundle';
@@ -14,6 +14,7 @@ const minimap = $<HTMLInputElement>('minimap');
 const fontFamily = $<HTMLInputElement>('fontFamily');
 const showClangdBadge = $<HTMLInputElement>('showClangdBadge');
 const showSlmBadge = $<HTMLInputElement>('showSlmBadge');
+const showFormatButton = $<HTMLInputElement>('showFormatButton');
 const slmModel = $<HTMLDivElement>('slmModel');
 const compileFlags = $<HTMLTextAreaElement>('compileFlags');
 const statusEl = $<HTMLDivElement>('status');
@@ -75,6 +76,7 @@ function render(s: Settings): void {
   if (document.activeElement !== fontFamily) fontFamily.value = s.fontFamily;
   showClangdBadge.checked = s.showClangdBadge;
   showSlmBadge.checked = s.showSlmBadge;
+  showFormatButton.checked = s.showFormatButton;
   radios.get(s.slmModel)!.checked = true;
   if (document.activeElement !== compileFlags) compileFlags.value = s.compileFlags.join('\n');
   for (const id of featureIds) boxes.get(id)!.checked = s.features[id];
@@ -91,6 +93,7 @@ function read(): Partial<Settings> {
     fontFamily: fontFamily.value.trim(),
     showClangdBadge: showClangdBadge.checked,
     showSlmBadge: showSlmBadge.checked,
+    showFormatButton: showFormatButton.checked,
     slmModel: selectedModel(),
     compileFlags: compileFlags.value.split('\n').map((l) => l.trim()).filter(Boolean),
     features,

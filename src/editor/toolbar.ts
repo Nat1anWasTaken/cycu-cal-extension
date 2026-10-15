@@ -8,13 +8,20 @@ export interface Toolbar {
   setMode(useMonaco: boolean): void;
   setClangd(status: ServerStatus | 'starting', detail?: string): void;
   setSlm(status: SlmStatus, progress?: number, detail?: string): void;
-  /** Which status badges the user wants; each still hides while Ace is active. */
-  setBadges(show: { clangd: boolean; slm: boolean }): void;
+  /** Which badges/buttons the user wants; each still hides while Ace is active. */
+  setVisible(show: ToolbarVisibility): void;
   dispose(): void;
+}
+
+export interface ToolbarVisibility {
+  clangd: boolean;
+  slm: boolean;
+  format: boolean;
 }
 
 export interface ToolbarOptions {
   onToggle: (useMonaco: boolean) => void;
+  onFormat: () => void;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, attrs: Record<string, string> = {}): HTMLElementTagNameMap[K] {
@@ -71,15 +78,26 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
     });
   });
 
+  const format = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn', {
+    type: 'button',
+    title: 'Format code with clang-format (Shift+Alt+F)',
+  });
+  format.append(icon('fa-solid fa-wand-magic-sparkles'), Object.assign(el('span', 'cal-ext-btn-text'), { textContent: 'Format' }));
+  format.addEventListener('click', (e) => {
+    e.preventDefault();
+    opts.onFormat();
+  });
+
   const clangd = el('span', 'badge rounded-pill cal-ext-pill', { 'data-state': 'starting' });
   const slm = el('span', 'badge rounded-pill cal-ext-pill', { 'data-state': 'idle' });
-  let badges = { clangd: true, slm: false };
-  const syncBadges = () => {
-    clangd.hidden = !useMonaco || !badges.clangd;
-    slm.hidden = !useMonaco || !badges.slm;
+  let visible: ToolbarVisibility = { clangd: true, slm: false, format: false };
+  const syncVisible = () => {
+    clangd.hidden = !useMonaco || !visible.clangd;
+    slm.hidden = !useMonaco || !visible.slm;
+    format.hidden = !useMonaco || !visible.format;
   };
 
-  root.append(clangd, slm, toggle, gear);
+  root.append(clangd, slm, format, toggle, gear);
 
   const bar = document.querySelector('.coding-toolbar');
   const buttons = bar?.querySelector('#button-container');
@@ -93,7 +111,7 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
       toggleText.textContent = m ? 'Monaco' : 'Ace';
       toggle.title = m ? 'Using Monaco editor — click to switch back to the site editor (Ace)' : 'Using the site editor (Ace) — click to switch to Monaco';
       toggle.setAttribute('aria-pressed', String(m));
-      syncBadges();
+      syncVisible();
     },
     setClangd(status, detail) {
       clangd.dataset.state = status;
@@ -110,9 +128,9 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
       slm.textContent = SLM_LABEL[status] + pct;
       slm.title = detail ?? '';
     },
-    setBadges(show) {
-      badges = { ...show };
-      syncBadges();
+    setVisible(show) {
+      visible = { ...show };
+      syncVisible();
     },
     dispose() {
       root.remove();
