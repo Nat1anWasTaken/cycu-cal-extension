@@ -8,7 +8,8 @@ export interface Toolbar {
   setMode(useMonaco: boolean): void;
   setClangd(status: ServerStatus | 'starting', detail?: string): void;
   setSlm(status: SlmStatus, progress?: number, detail?: string): void;
-  setSlmVisible(visible: boolean): void;
+  /** Which status badges the user wants; each still hides while Ace is active. */
+  setBadges(show: { clangd: boolean; slm: boolean }): void;
   dispose(): void;
 }
 
@@ -72,7 +73,11 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
 
   const clangd = el('span', 'badge rounded-pill cal-ext-pill', { 'data-state': 'starting' });
   const slm = el('span', 'badge rounded-pill cal-ext-pill', { 'data-state': 'idle' });
-  slm.hidden = true;
+  let badges = { clangd: true, slm: false };
+  const syncBadges = () => {
+    clangd.hidden = !useMonaco || !badges.clangd;
+    slm.hidden = !useMonaco || !badges.slm;
+  };
 
   root.append(clangd, slm, toggle, gear);
 
@@ -88,9 +93,7 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
       toggleText.textContent = m ? 'Monaco' : 'Ace';
       toggle.title = m ? 'Using Monaco editor — click to switch back to the site editor (Ace)' : 'Using the site editor (Ace) — click to switch to Monaco';
       toggle.setAttribute('aria-pressed', String(m));
-      clangd.hidden = !m;
-      slm.dataset.hiddenByMode = String(!m);
-      slm.hidden = !m || slm.dataset.enabled !== 'true';
+      syncBadges();
     },
     setClangd(status, detail) {
       clangd.dataset.state = status;
@@ -107,9 +110,9 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
       slm.textContent = SLM_LABEL[status] + pct;
       slm.title = detail ?? '';
     },
-    setSlmVisible(v) {
-      slm.dataset.enabled = String(v);
-      slm.hidden = !v || slm.dataset.hiddenByMode === 'true';
+    setBadges(show) {
+      badges = { ...show };
+      syncBadges();
     },
     dispose() {
       root.remove();

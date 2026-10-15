@@ -42,6 +42,10 @@ export interface Settings {
   minimap: boolean;
   /** CSS font-family list for the editor; empty uses the site's monospace font. */
   fontFamily: string;
+  /** Show the clangd status badge in the page toolbar. */
+  showClangdBadge: boolean;
+  /** Show the local AI status badge in the page toolbar (only while inline completion is on). */
+  showSlmBadge: boolean;
   slmModel: SlmModelId;
 }
 
@@ -66,6 +70,8 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'light',
   minimap: false,
   fontFamily: '',
+  showClangdBadge: true,
+  showSlmBadge: true,
   slmModel: 'qwen2.5-coder-0.5b',
 };
 

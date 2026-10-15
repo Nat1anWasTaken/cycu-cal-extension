@@ -1,4 +1,4 @@
-// Extension options page: feature toggles, editor look, SLM model and clangd compile flags.
+// Extension options page: feature toggles, editor look, toolbar badges, SLM model and clangd compile flags.
 // Every change is saved immediately; the toast in #status confirms it.
 
 import { isBundled } from '../shared/bundle';
@@ -12,6 +12,8 @@ const featuresEl = $<HTMLElement>('features');
 const useMonaco = $<HTMLInputElement>('useMonaco');
 const minimap = $<HTMLInputElement>('minimap');
 const fontFamily = $<HTMLInputElement>('fontFamily');
+const showClangdBadge = $<HTMLInputElement>('showClangdBadge');
+const showSlmBadge = $<HTMLInputElement>('showSlmBadge');
 const slmModel = $<HTMLDivElement>('slmModel');
 const compileFlags = $<HTMLTextAreaElement>('compileFlags');
 const statusEl = $<HTMLDivElement>('status');
@@ -71,6 +73,8 @@ function render(s: Settings): void {
   $<HTMLInputElement>(`theme-${s.theme}`).checked = true;
   minimap.checked = s.minimap;
   if (document.activeElement !== fontFamily) fontFamily.value = s.fontFamily;
+  showClangdBadge.checked = s.showClangdBadge;
+  showSlmBadge.checked = s.showSlmBadge;
   radios.get(s.slmModel)!.checked = true;
   if (document.activeElement !== compileFlags) compileFlags.value = s.compileFlags.join('\n');
   for (const id of featureIds) boxes.get(id)!.checked = s.features[id];
@@ -85,6 +89,8 @@ function read(): Partial<Settings> {
     theme: $<HTMLInputElement>('theme-dark').checked ? 'dark' : 'light',
     minimap: minimap.checked,
     fontFamily: fontFamily.value.trim(),
+    showClangdBadge: showClangdBadge.checked,
+    showSlmBadge: showSlmBadge.checked,
     slmModel: selectedModel(),
     compileFlags: compileFlags.value.split('\n').map((l) => l.trim()).filter(Boolean),
     features,

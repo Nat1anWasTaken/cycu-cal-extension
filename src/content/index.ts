@@ -190,6 +190,10 @@ function mountSession(
 // Main
 // ---------------------------------------------------------------------------
 
+function badgeVisibility(s: Settings): { clangd: boolean; slm: boolean } {
+  return { clangd: s.showClangdBadge, slm: s.showSlmBadge && s.features.inlineCompletion };
+}
+
 async function main(): Promise<void> {
   const aceEl = document.getElementById('editor');
   const coding = document.getElementById('coding');
@@ -214,7 +218,7 @@ async function main(): Promise<void> {
       saveSettings({ useMonaco: m }).catch((err) => console.warn(LOG, 'cannot save settings', err));
     },
   });
-  toolbar.setSlmVisible(settings.features.inlineCompletion);
+  toolbar.setBadges(badgeVisibility(settings));
 
   function setMode(m: boolean, userInitiated: boolean): void {
     if (m) {
@@ -279,7 +283,7 @@ async function main(): Promise<void> {
   onSettingsChanged((next) => {
     settings = next;
     if (next.useMonaco !== useMonaco) setMode(next.useMonaco, false);
-    toolbar.setSlmVisible(next.features.inlineCompletion);
+    toolbar.setBadges(badgeVisibility(next));
     if (session) {
       session.setTheme(next);
       try {
