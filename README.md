@@ -36,3 +36,7 @@ pnpm test
 
 Load `dist/` as an unpacked extension to try your changes. The clangd runtime is downloaded into `vendor/` on the
 first build.
+
+## License
+
+[MIT](LICENSE). Bundled third-party components (clangd, Monaco, wllama, model weights) keep their own licenses.
