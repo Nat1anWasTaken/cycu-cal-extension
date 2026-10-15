@@ -1,0 +1,50 @@
+name: Build extension
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # clangd.wasm (~127 MB) is not committed; cache it by the pinned hashes in fetch-vendor.mjs.
+      - uses: actions/cache@v4
+        with:
+          path: vendor
+          key: vendor-${{ hashFiles('scripts/fetch-vendor.mjs') }}
+
+      - run: pnpm typecheck
+
+      - run: pnpm package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cycu-cal-extension
+          # Uploading the directory (not the zip) makes the downloaded artifact a single zip
+          # that unpacks straight into a "Load unpacked"-ready folder.
+          path: dist/
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/*.zip --generate-notes --title "$GITHUB_REF_NAME"
