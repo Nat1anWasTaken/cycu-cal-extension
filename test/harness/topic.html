@@ -1,0 +1,272 @@
+<!doctype html>
+<!--
+  HAND-WRITTEN mock of a cycu-cal.tw topic page (not copied from the site). It recreates only the
+  IDs/classes and page-script behaviour the extension relies on:
+    top-level `let editor, Range, arr2, arrE`; function declarations initializeEditor /
+    initializeForbiddenAreas / applyForbiddenAreaRestrictions / resetEditorWithCode;
+    localStorage draft autosave on Ace `change`; Cmd/Ctrl-Enter Ace command → #submitbtn;
+    RUN shows editor.getValue() in #theResult (no network); reset loads a fixed precode.
+  Default: forbid lines [[1,3]] with the keyboard guard. ?passed=1: read-only, no guard.
+-->
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <title>Harness topic</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <style>
+      :root {
+        --cal-font-mono: Menlo, Consolas, 'Noto Sans Mono CJK TC', 'PingFang TC', monospace;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      #codeform {
+        flex: 1 1 0%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 12px;
+        border-bottom: 1px solid #dee2e6;
+        background: #f8f9fa;
+      }
+      .title-right,
+      .coding-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #button-container {
+        display: flex;
+        gap: 6px;
+      }
+      .wrap {
+        flex: 1 1 0%;
+        display: flex;
+        min-height: 0;
+      }
+      #instruction {
+        width: 35%;
+        padding: 12px;
+        overflow: auto;
+        border-right: 1px solid #dee2e6;
+      }
+      #coderesult {
+        flex: 1 1 0%;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      #coding {
+        flex: 1 1 0%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      #editor {
+        flex: 1 1 0%;
+        position: relative;
+        overflow: hidden;
+      }
+      #splitDividerH {
+        height: 6px;
+        background: #ced4da;
+        cursor: row-resize;
+      }
+      #resulting {
+        height: 160px;
+        overflow: auto;
+        padding: 8px;
+        background: #212529;
+        color: #f8f9fa;
+      }
+      #theResult {
+        margin: 0;
+        white-space: pre-wrap;
+        font-family: var(--cal-font-mono);
+      }
+      .readonly-highlight {
+        position: absolute;
+        background: #e9ecef;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="codeform" onsubmit="return false">
+      <div class="title-row">
+        <div class="title-left fw-bold">Week 3 · 題目 1001</div>
+        <div class="title-right">
+          <div class="coding-toolbar">
+            <span class="text-muted small">剩餘執行次數 <span id="exe_remaining">39</span></span>
+            <div id="button-container">
+              <button type="button" id="reset-button" class="btn btn-sm btn-outline-danger">
+                <i class="fa-solid fa-rotate-left"></i> 重設
+              </button>
+              <button type="button" id="submitbtn" class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-play"></i> RUN
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wrap">
+        <div id="instruction">
+          <h5>題目說明</h5>
+          <p>讀入兩個整數，輸出它們的和。前三行為鎖定區域，不可修改。</p>
+        </div>
+        <div id="coderesult">
+          <div id="coding">
+            <div id="editor"></div>
+          </div>
+          <div id="splitDividerH"></div>
+          <div id="resulting"><pre id="theResult"></pre></div>
+        </div>
+      </div>
+    </form>
+
+    <script src="/static/vendor/ace/ace.js"></script>
+    <script src="/static/vendor/ace/ext-language_tools.js"></script>
+    <script src="/static/vendor/ace/mode-c_cpp.js"></script>
+    <script src="/static/vendor/ace/theme-dreamweaver.js"></script>
+    <script>
+      // Page script (classic): top-level lets become global lexical bindings, like the site's.
+      let editor, Range, arr2, arrE, csrftoken;
+      csrftoken = 'harness';
+      const TOPIC_ID = (location.pathname.match(/topic\/(\w+)/) || [])[1] || '1001';
+      const DRAFT_KEY = 'cal_draft:u42:' + TOPIC_ID;
+      const PASSED = new URLSearchParams(location.search).has('passed');
+      const forbid_lines = PASSED ? [] : [[1, 3]];
+      const PRECODE =
+        '#include <stdio.h>\n#include <stdlib.h>\n// 以上三行不可修改 (locked)\nint main(void) {\n\t\n\treturn 0;\n}\n';
+      let markerIds = [];
+      window.__runs = [];
+
+      function initializeEditor() {
+        editor = ace.edit('editor');
+        Range = ace.require('ace/range').Range;
+        editor.setTheme('ace/theme/dreamweaver');
+        editor.session.setMode('ace/mode/c_cpp');
+        editor.setOptions({
+          tabSize: 2,
+          useSoftTabs: false,
+          enableAutoIndent: false,
+          dragEnabled: false,
+          enableBasicAutocompletion: true,
+          // Keep the site's wide mono stack: a narrower one breaks CJK width.
+          fontFamily: 'var(--cal-font-mono)',
+          fontSize: '16px',
+        });
+        editor.commands.addCommand({
+          name: 'runCode',
+          bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
+          exec: function () {
+            document.getElementById('submitbtn').click();
+          },
+        });
+      }
+
+      function initializeForbiddenAreas() {
+        markerIds.forEach(function (id) {
+          editor.session.removeMarker(id);
+        });
+        markerIds = [];
+        arr2 = [];
+        arrE = [];
+        forbid_lines.forEach(function (fl) {
+          const last = fl[1] - 1;
+          const r = new Range(fl[0] - 1, 0, last, editor.session.getLine(last).length);
+          arr2.push(r);
+          arrE.push(r.end);
+          markerIds.push(editor.session.addMarker(r, 'readonly-highlight', 'fullLine'));
+        });
+      }
+
+      function applyForbiddenAreaRestrictions() {
+        editor.keyBinding.addKeyboardHandler({
+          handleKeyboard: function (data, hash, keyString, keyCode) {
+            if (hash === -1 && !keyString) return false;
+            if (keyCode >= 33 && keyCode <= 40) return false; // navigation keys
+            const sel = editor.getSelectionRange();
+            for (let i = 0; i < arr2.length; i++) {
+              const before = Range.comparePoints(sel.start, arrE[i]) < 0;
+              if (sel.intersects(arr2[i]) && before) return { command: 'null', passEvent: false };
+              if (keyCode === 8 && sel.isEmpty() && Range.comparePoints(sel.start, arrE[i]) === 0)
+                return { command: 'null', passEvent: false };
+            }
+            return false;
+          },
+        });
+      }
+
+      function resetEditorWithCode(code) {
+        editor.setValue(code, -1);
+        initializeEditor();
+        initializeForbiddenAreas();
+      }
+
+      initializeEditor();
+      editor.setValue(localStorage.getItem(DRAFT_KEY) || PRECODE, -1);
+      initializeForbiddenAreas();
+      editor.on('change', function () {
+        localStorage.setItem(DRAFT_KEY, editor.getValue());
+      });
+      if (PASSED) {
+        editor.setReadOnly(true);
+        editor.container.style.background = '#e6e6e6';
+        document.getElementById('button-container').style.display = 'none';
+      } else {
+        applyForbiddenAreaRestrictions();
+      }
+
+      document.getElementById('submitbtn').addEventListener('click', function () {
+        const code = editor.getValue();
+        window.__runs.push(code);
+        document.getElementById('theResult').textContent = code;
+        const left = document.getElementById('exe_remaining');
+        left.textContent = String(Number(left.textContent) - 1);
+        if (Number(left.textContent) <= 0) {
+          editor.setReadOnly(true);
+          this.disabled = true;
+        }
+      });
+
+      document.getElementById('reset-button').addEventListener('click', function () {
+        fetch('/cal/get_precode/' + TOPIC_ID)
+          .then(function (r) {
+            return r.text();
+          })
+          .then(resetEditorWithCode);
+      });
+
+      (function divider() {
+        const bar = document.getElementById('splitDividerH');
+        const result = document.getElementById('resulting');
+        bar.addEventListener('mousedown', function (e) {
+          const y0 = e.clientY;
+          const h0 = result.offsetHeight;
+          function move(ev) {
+            result.style.height = Math.max(40, h0 - (ev.clientY - y0)) + 'px';
+            editor.resize();
+          }
+          function up() {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+          }
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', up);
+        });
+      })();
+    </script>
+  </body>
+</html>
