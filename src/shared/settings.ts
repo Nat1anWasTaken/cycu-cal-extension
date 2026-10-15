@@ -1,5 +1,6 @@
 // User settings, persisted in chrome.storage.sync and shared by the content script and options page.
 
+import { BUNDLED_MODELS } from './bundle';
 import type { SlmModelId } from './protocol';
 
 export type FeatureId =
@@ -75,7 +76,8 @@ export const DEFAULT_SETTINGS: Settings = {
   showClangdBadge: true,
   showSlmBadge: true,
   showFormatButton: true,
-  slmModel: 'qwen2.5-coder-0.5b',
+  // An offline build defaults to the model it ships with.
+  slmModel: BUNDLED_MODELS[0] ?? 'qwen2.5-coder-0.5b',
 };
 
 const KEY = 'settings';

@@ -8,7 +8,8 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs --watch",
     "package": "node scripts/build.mjs --zip",
-    "package:offline": "node scripts/build.mjs --zip --offline",
+    "package:offline-0.5b": "node scripts/build.mjs --zip --offline=qwen2.5-coder-0.5b",
+    "package:offline-1.5b": "node scripts/build.mjs --zip --offline=qwen2.5-coder-1.5b",
     "fetch-vendor": "node scripts/fetch-vendor.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test src/**/__tests__/*.test.ts"

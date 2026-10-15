@@ -3,7 +3,7 @@
 //   node scripts/e2e-slm.mjs            # build into /tmp/cal-dist-slm, then test
 //   SKIP_BUILD=1 node scripts/e2e-slm.mjs
 //   MODEL=qwen2.5-coder-1.5b node scripts/e2e-slm.mjs
-//   OFFLINE=1 node scripts/e2e-slm.mjs   # offline build; Hugging Face is unreachable, nothing may download
+//   OFFLINE=1 node scripts/e2e-slm.mjs   # offline build bundling MODEL; Hugging Face is unreachable, nothing may download
 //
 // Launches a separate headless Brave with a fresh temp profile and the built extension,
 // connects SLM_PORT from the background service worker (an extension context, so the
@@ -32,7 +32,7 @@ const check = (name, ok, info = '') => {
 };
 
 if (!process.env.SKIP_BUILD) {
-  execFileSync('node', [join(root, 'scripts/build.mjs'), ...(OFFLINE ? ['--offline'] : [])], { stdio: 'inherit', env: { ...process.env, OUT_DIR } });
+  execFileSync('node', [join(root, 'scripts/build.mjs'), ...(OFFLINE ? [`--offline=${MODEL}`] : [])], { stdio: 'inherit', env: { ...process.env, OUT_DIR } });
 }
 
 async function cdp(wsUrl, label) {

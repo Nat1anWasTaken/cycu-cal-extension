@@ -3,7 +3,8 @@
 //   pnpm build            # fetch vendor files (if needed) + build dist/
 //   pnpm build --watch    # rebuild on change (vendor fetched once)
 //   pnpm package          # build + zip to release/cycu-cal-extension-<version>.zip
-//   pnpm package:offline  # same, with the default model bundled → ...-<version>-offline.zip
+//   pnpm package:offline-0.5b  # same, with a model bundled → ...-<version>-offline-0.5b.zip
+//   pnpm package:offline-1.5b  #   (or: node scripts/build.mjs --zip --offline=<model id>)
 //
 // Content scripts cannot be ES modules, so they are built separately as self-contained
 // IIFE bundles. Extension pages (background, offscreen, options) and their workers are
@@ -14,7 +15,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
-import { bundledModelPath, OFFLINE_MODEL } from '../src/shared/protocol.ts';
+import { bundledModelPath, modelSize, OFFLINE_MODELS, SLM_MODELS } from '../src/shared/protocol.ts';
 import { fetchVendor } from './fetch-vendor.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -22,9 +23,17 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = process.env.OUT_DIR ? resolve(process.env.OUT_DIR) : join(root, 'dist');
 const watch = process.argv.includes('--watch');
 const zip = process.argv.includes('--zip');
-// --offline bundles the model into the package, so local completion needs no network.
-const bundledModels = process.argv.includes('--offline') ? [OFFLINE_MODEL] : [];
+// --offline[=<model id>] bundles a model into the package, so local completion needs no network.
+const bundledModels = offlineModels();
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+
+function offlineModels() {
+  const arg = process.argv.find((a) => a === '--offline' || a.startsWith('--offline='));
+  if (!arg) return [];
+  const id = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : OFFLINE_MODELS[0];
+  if (!(id in SLM_MODELS)) throw new Error(`--offline: unknown model "${id}" (expected one of ${Object.keys(SLM_MODELS).join(', ')})`);
+  return [id];
+}
 
 const common = {
   root,
@@ -133,7 +142,8 @@ function writeManifest() {
 function packageZip() {
   const out = join(root, 'release');
   mkdirSync(out, { recursive: true });
-  const file = join(out, `cycu-cal-extension-${pkg.version}${bundledModels.length ? '-offline' : ''}.zip`);
+  const offline = bundledModels.map((id) => `-offline-${modelSize(id)}`).join('');
+  const file = join(out, `cycu-cal-extension-${pkg.version}${offline}.zip`);
   rmSync(file, { force: true });
   // GGUF weights barely compress; storing them (-n) saves minutes of zip time.
   execFileSync('zip', ['-qr', '-9', '-n', '.gguf', file, '.'], { cwd: dist, stdio: 'inherit' });

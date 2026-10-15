@@ -18,7 +18,8 @@ It also works on CAL servers hosted on other domains or the LAN (any page under 
 1. Download a zip from the [latest release](https://github.com/Nat1anWasTaken/cycu-cal-extension/releases/latest)
    and unzip it:
    - `cycu-cal-extension-<version>.zip` (~27 MB) downloads the AI model the first time you turn it on.
-   - `cycu-cal-extension-<version>-offline.zip` (~400 MB) includes the model.
+   - `cycu-cal-extension-<version>-offline-0.5b.zip` (~400 MB) includes the Qwen2.5-Coder 0.5B model.
+   - `cycu-cal-extension-<version>-offline-1.5b.zip` (~1 GB) includes the larger, more accurate 1.5B model.
 2. Open `chrome://extensions` (or `brave://extensions`) and turn on **Developer mode**.
 3. Click **Load unpacked** and select the unzipped folder.
 
@@ -28,10 +29,11 @@ Requires Node 24+ and pnpm.
 
 ```sh
 pnpm install
-pnpm dev                # build to dist/ and rebuild on change
-pnpm build              # build to dist/
-pnpm package            # zip to release/
-pnpm package:offline    # zip to release/, bundling the model
+pnpm dev                   # build to dist/ and rebuild on change
+pnpm build                 # build to dist/
+pnpm package               # zip to release/
+pnpm package:offline-0.5b  # zip to release/, bundling the 0.5B model
+pnpm package:offline-1.5b  # zip to release/, bundling the 1.5B model
 pnpm test
 ```
 

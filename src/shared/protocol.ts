@@ -154,8 +154,11 @@ export const SLM_MODELS: Record<SlmModelId, SlmModel> = {
   },
 };
 
-/** Model bundled into the offline build (`pnpm package --offline`). */
-export const OFFLINE_MODEL: SlmModelId = 'qwen2.5-coder-0.5b';
+/** Models with an offline build (`pnpm package:offline-<size>`); the first is what a bare `--offline` bundles. */
+export const OFFLINE_MODELS: readonly SlmModelId[] = ['qwen2.5-coder-0.5b', 'qwen2.5-coder-1.5b'];
+
+/** Short name used in offline package file names, e.g. "1.5b" for qwen2.5-coder-1.5b. */
+export const modelSize = (id: SlmModelId): string => id.slice(id.lastIndexOf('-') + 1);
 
 export function modelUrl(id: SlmModelId): string {
   const m = SLM_MODELS[id];

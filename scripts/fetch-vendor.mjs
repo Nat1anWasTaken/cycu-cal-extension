@@ -2,7 +2,7 @@
 // Files are pinned by SHA-256; an existing file with the right hash is reused.
 //
 //   node scripts/fetch-vendor.mjs            # fetch missing / mismatched files
-//   node scripts/fetch-vendor.mjs --offline  # also fetch the model bundled into the offline build
+//   node scripts/fetch-vendor.mjs --offline  # also fetch the models bundled into the offline builds
 //   node scripts/fetch-vendor.mjs --print    # print hashes of what is on disk (for re-pinning)
 
 import { createHash } from 'node:crypto';
@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
-import { bundledModelPath, modelUrl, OFFLINE_MODEL, SLM_MODELS } from '../src/shared/protocol.ts';
+import { bundledModelPath, modelUrl, OFFLINE_MODELS, SLM_MODELS } from '../src/shared/protocol.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -98,11 +98,11 @@ export async function fetchVendor({ models = [] } = {}) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (process.argv.includes('--print')) {
-    for (const f of [...VENDOR_FILES, modelFile(OFFLINE_MODEL)]) {
+    for (const f of [...VENDOR_FILES, ...OFFLINE_MODELS.map(modelFile)]) {
       const abs = join(root, f.path);
       console.log(f.path, existsSync(abs) ? sha256(readFileSync(abs)) : '(missing)');
     }
   } else {
-    await fetchVendor({ models: process.argv.includes('--offline') ? [OFFLINE_MODEL] : [] });
+    await fetchVendor({ models: process.argv.includes('--offline') ? OFFLINE_MODELS : [] });
   }
 }

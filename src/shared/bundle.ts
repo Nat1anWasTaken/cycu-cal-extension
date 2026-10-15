@@ -1,5 +1,5 @@
 // Build-time facts about this package. scripts/build.mjs defines __BUNDLED_MODELS__:
-// empty for the online build, [OFFLINE_MODEL] for the offline one.
+// empty for the online build, [<model>] for an offline one (`--offline=<model>`).
 
 import type { SlmModelId } from './protocol';
 
