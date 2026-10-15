@@ -1,0 +1,77 @@
+/* Extension styles for the topic page (bundled with Monaco's CSS into content.css).
+   Content-script CSS is injected before the page's own sheets, so rules that compete with
+   Bootstrap (.btn, .badge) are scoped under .cal-ext-toolbar for higher specificity. */
+
+.cal-ext-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+.cal-ext-toolbar .cal-ext-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+.cal-ext-toolbar .cal-ext-pill {
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 50rem;
+  color: #fff;
+  background-color: #6c757d;
+  cursor: default;
+}
+.cal-ext-toolbar .cal-ext-pill[data-state='ready'] {
+  background-color: #198754;
+}
+.cal-ext-toolbar .cal-ext-pill[data-state='loading'],
+.cal-ext-toolbar .cal-ext-pill[data-state='downloading'] {
+  background-color: #0d6efd;
+}
+.cal-ext-toolbar .cal-ext-pill[data-state='error'] {
+  background-color: #dc3545;
+}
+.cal-ext-toolbar [hidden],
+.cal-monaco-host[hidden] {
+  display: none !important;
+}
+
+/* Monaco host: overlays #editor (which stays in the layout, visibility:hidden). */
+.cal-monaco-host {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.cal-monaco-host .monaco-editor {
+  /* Monaco renders CJK in the same mono stack as the site (var(--cal-font-mono)). */
+  text-align: left;
+}
+
+/* Read-only mirrors the site's Ace look. */
+.cal-monaco-host.cal-readonly .monaco-editor {
+  --vscode-editor-background: #e6e6e6;
+  --vscode-editorGutter-background: #e6e6e6;
+}
+.cal-monaco-host.cal-readonly.cal-dark .monaco-editor {
+  --vscode-editor-background: #2a2a2a;
+  --vscode-editorGutter-background: #2a2a2a;
+}
+
+/* Locked lines (like the site's `readonly-highlight` Ace marker). */
+.monaco-editor .cal-locked-line {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.monaco-editor .cal-locked-margin {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.cal-monaco-host.cal-dark .monaco-editor .cal-locked-line,
+.cal-monaco-host.cal-dark .monaco-editor .cal-locked-margin {
+  background-color: rgba(255, 255, 255, 0.08);
+}
