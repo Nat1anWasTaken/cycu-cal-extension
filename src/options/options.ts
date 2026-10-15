@@ -1,4 +1,5 @@
 // Extension options page: feature toggles, editor look, SLM model and clangd compile flags.
+// Every change is saved immediately; the toast in #status confirms it.
 
 import { isBundled } from '../shared/bundle';
 import { SLM_MODELS, type SlmModelId } from '../shared/protocol';
@@ -7,16 +8,33 @@ import { DEFAULT_SETTINGS, FEATURE_LABELS, loadSettings, saveSettings, type Feat
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
 const form = $<HTMLFormElement>('form');
-const featuresEl = $<HTMLDivElement>('features');
+const featuresEl = $<HTMLElement>('features');
 const useMonaco = $<HTMLInputElement>('useMonaco');
-const theme = $<HTMLSelectElement>('theme');
 const minimap = $<HTMLInputElement>('minimap');
-const slmModel = $<HTMLSelectElement>('slmModel');
+const slmModel = $<HTMLDivElement>('slmModel');
 const compileFlags = $<HTMLTextAreaElement>('compileFlags');
-const statusEl = $<HTMLSpanElement>('status');
+const statusEl = $<HTMLDivElement>('status');
+
+const FEATURE_HINTS: Record<FeatureId, string> = {
+  diagnostics: 'Errors and warnings as you type',
+  completion: 'Suggestions for names and members',
+  hover: 'Types and docs under the cursor',
+  signatureHelp: 'Parameter hints inside calls',
+  formatting: 'Format the document or a selection',
+  definition: 'Jump to declarations and usages',
+  highlightRename: 'Highlight and rename symbols',
+  outline: 'Quick outline (Ctrl/Cmd-Shift-O)',
+  folding: 'Collapse blocks and comments',
+  inlayHints: 'Inline parameter names and types',
+  semanticTokens: 'Color by meaning, not just syntax',
+  documentLinks: 'Ctrl/Cmd-click to peek at a header',
+  inlineCompletion: 'Gray ghost-text suggestions; press Tab to accept',
+};
 
 const featureIds = Object.keys(FEATURE_LABELS) as FeatureId[];
 const boxes = new Map<FeatureId, HTMLInputElement>();
+const modelIds = Object.keys(SLM_MODELS) as SlmModelId[];
+const radios = new Map<SlmModelId, HTMLInputElement>();
 
 function sizeText(id: SlmModelId): string {
   const mb = SLM_MODELS[id].approxMB;
@@ -32,18 +50,29 @@ function confirmDownload(id: SlmModelId): boolean {
   );
 }
 
+let toastTimer: ReturnType<typeof setTimeout> | undefined;
 function setStatus(text: string, error = false): void {
   statusEl.textContent = text;
   statusEl.classList.toggle('error', error);
+  statusEl.classList.add('show');
+  clearTimeout(toastTimer);
+  if (!error) toastTimer = setTimeout(() => statusEl.classList.remove('show'), 1600);
+}
+
+const selectedModel = (): SlmModelId => modelIds.find((id) => radios.get(id)!.checked) ?? DEFAULT_SETTINGS.slmModel;
+
+function syncModelState(): void {
+  slmModel.classList.toggle('off', !boxes.get('inlineCompletion')!.checked);
 }
 
 function render(s: Settings): void {
   useMonaco.checked = s.useMonaco;
-  theme.value = s.theme;
+  $<HTMLInputElement>(`theme-${s.theme}`).checked = true;
   minimap.checked = s.minimap;
-  slmModel.value = s.slmModel;
-  compileFlags.value = s.compileFlags.join('\n');
+  radios.get(s.slmModel)!.checked = true;
+  if (document.activeElement !== compileFlags) compileFlags.value = s.compileFlags.join('\n');
   for (const id of featureIds) boxes.get(id)!.checked = s.features[id];
+  syncModelState();
 }
 
 function read(): Partial<Settings> {
@@ -51,59 +80,93 @@ function read(): Partial<Settings> {
   for (const id of featureIds) features[id] = boxes.get(id)!.checked;
   return {
     useMonaco: useMonaco.checked,
-    theme: theme.value === 'dark' ? 'dark' : 'light',
+    theme: $<HTMLInputElement>('theme-dark').checked ? 'dark' : 'light',
     minimap: minimap.checked,
-    slmModel: slmModel.value as SlmModelId,
+    slmModel: selectedModel(),
     compileFlags: compileFlags.value.split('\n').map((l) => l.trim()).filter(Boolean),
     features,
   };
 }
 
-// Build controls.
-for (const id of featureIds) {
-  const label = document.createElement('label');
-  const box = document.createElement('input');
-  box.type = 'checkbox';
-  box.id = `feature-${id}`;
-  box.dataset.feature = id;
-  label.append(box, ` ${FEATURE_LABELS[id]}`);
-  featuresEl.append(label);
-  boxes.set(id, box);
-}
-for (const [id, m] of Object.entries(SLM_MODELS) as Array<[SlmModelId, (typeof SLM_MODELS)[SlmModelId]]>) {
-  slmModel.append(new Option(`${m.label} – ${isBundled(id) ? 'included' : `~${sizeText(id)} download`}`, id));
-}
-
-// Enabling inline completion (or switching to another model while enabled) downloads weights: ask first.
-const slmBox = boxes.get('inlineCompletion')!;
-slmBox.addEventListener('change', () => {
-  if (slmBox.checked && !confirmDownload(slmModel.value as SlmModelId)) slmBox.checked = false;
-});
-let lastModel = slmModel.value;
-slmModel.addEventListener('focus', () => (lastModel = slmModel.value));
-slmModel.addEventListener('change', () => {
-  if (slmBox.checked && !confirmDownload(slmModel.value as SlmModelId)) slmModel.value = lastModel;
-  lastModel = slmModel.value;
-});
-
-$<HTMLButtonElement>('resetFlags').addEventListener('click', () => {
-  compileFlags.value = DEFAULT_SETTINGS.compileFlags.join('\n');
-});
-
-form.addEventListener('input', () => setStatus('Unsaved changes'));
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function save(): Promise<void> {
   try {
     render(await saveSettings(read()));
     setStatus('Saved');
   } catch (err) {
     setStatus(`Save failed: ${err instanceof Error ? err.message : String(err)}`, true);
   }
+}
+
+function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text?: string): HTMLElementTagNameMap[K] {
+  const e = document.createElement(tag);
+  e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// Build controls. Inline completion lives in the AI section, next to its model picker.
+for (const id of featureIds) {
+  const row = el('label', 'row');
+  const text = el('span', 'text');
+  text.append(el('span', 'title', FEATURE_LABELS[id]), el('span', 'desc', FEATURE_HINTS[id]));
+  const box = el('input', 'switch');
+  box.type = 'checkbox';
+  box.id = `feature-${id}`;
+  box.dataset.feature = id;
+  row.append(text, box);
+  (id === 'inlineCompletion' ? $('slmToggle') : featuresEl).append(row);
+  boxes.set(id, box);
+}
+for (const id of modelIds) {
+  const m = SLM_MODELS[id];
+  const [name, quant] = m.label.split(/ (?=\()/);
+  const row = el('label', 'model');
+  const radio = el('input', '');
+  radio.type = 'radio';
+  radio.name = 'slmModel';
+  radio.value = id;
+  const title = el('span', 'name', name);
+  if (quant) title.append(el('span', 'quant', quant));
+  const badge = isBundled(id) ? el('span', 'badge included', `Included · ${sizeText(id)}`) : el('span', 'badge', `${sizeText(id)} download`);
+  row.append(radio, title, badge);
+  slmModel.append(row);
+  radios.set(id, radio);
+}
+try {
+  $('version').textContent = `v${chrome.runtime.getManifest().version}`;
+} catch {
+  /* not running as an extension page */
+}
+
+// Enabling inline completion (or switching to another model while enabled) downloads weights: ask first.
+const slmBox = boxes.get('inlineCompletion')!;
+let lastModel = DEFAULT_SETTINGS.slmModel;
+form.addEventListener('change', (e) => {
+  const t = e.target;
+  if (t === compileFlags) return; // saved while typing
+  if (t === slmBox && slmBox.checked && !confirmDownload(selectedModel())) slmBox.checked = false;
+  if (t instanceof HTMLInputElement && t.name === 'slmModel') {
+    if (slmBox.checked && !confirmDownload(selectedModel())) radios.get(lastModel)!.checked = true;
+    lastModel = selectedModel();
+  }
+  syncModelState();
+  void save();
+});
+
+let flagsTimer: ReturnType<typeof setTimeout> | undefined;
+compileFlags.addEventListener('input', () => {
+  clearTimeout(flagsTimer);
+  flagsTimer = setTimeout(save, 600);
+});
+
+$<HTMLButtonElement>('resetFlags').addEventListener('click', () => {
+  compileFlags.value = DEFAULT_SETTINGS.compileFlags.join('\n');
+  void save();
 });
 
 loadSettings()
   .then((s) => {
     render(s);
-    lastModel = slmModel.value;
+    lastModel = s.slmModel;
   })
   .catch((err) => setStatus(`Could not load settings: ${err}`, true));

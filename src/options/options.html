@@ -8,53 +8,78 @@
   </head>
   <body>
     <main>
-      <h1>CYCU CAL Code Editor</h1>
+      <header class="masthead">
+        <div class="logo" aria-hidden="true">{ }</div>
+        <div>
+          <h1>CYCU CAL Code Editor</h1>
+          <p class="tagline">Monaco, clangd and local AI completion for the CAL judge. <span id="version"></span></p>
+        </div>
+      </header>
+
       <form id="form" autocomplete="off">
-        <section>
-          <h2>Editor</h2>
-          <label class="row"><input type="checkbox" id="useMonaco" /> Use the Monaco editor instead of the site's editor</label>
+        <h2>Editor</h2>
+        <section class="card">
           <label class="row">
-            <span class="label">Theme</span>
-            <select id="theme">
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
+            <span class="text">
+              <span class="title">Monaco editor</span>
+              <span class="desc">Replace the site's editor with Monaco. You can also switch from the toolbar on the page.</span>
+            </span>
+            <input type="checkbox" class="switch" id="useMonaco" />
           </label>
-          <label class="row"><input type="checkbox" id="minimap" /> Show minimap</label>
+          <div class="row">
+            <span class="text">
+              <span class="title">Theme</span>
+              <span class="desc">Color theme for the editor.</span>
+            </span>
+            <span class="segmented" role="radiogroup" aria-label="Theme">
+              <input type="radio" name="theme" id="theme-light" value="light" /><label for="theme-light">Light</label>
+              <input type="radio" name="theme" id="theme-dark" value="dark" /><label for="theme-dark">Dark</label>
+            </span>
+          </div>
+          <label class="row">
+            <span class="text">
+              <span class="title">Minimap</span>
+              <span class="desc">Show a code overview along the right edge.</span>
+            </span>
+            <input type="checkbox" class="switch" id="minimap" />
+          </label>
         </section>
 
-        <section>
-          <h2>Language features</h2>
-          <p class="hint">Changes apply to open editors immediately after saving.</p>
-          <div id="features" class="features"></div>
-        </section>
+        <h2>Language features</h2>
+        <p class="section-hint">Powered by clangd, which runs inside your browser. Changes apply to open editors right away.</p>
+        <section class="card features" id="features"></section>
 
-        <section>
-          <h2>Local AI completion</h2>
-          <label class="row">
-            <span class="label">Model</span>
-            <select id="slmModel"></select>
-          </label>
-          <p class="hint">
-            Models marked “included” ship with this extension and work offline. Others are downloaded once from
-            Hugging Face and cached in this browser. Only the code in the editor is used as context; nothing is sent
-            to a server.
+        <h2>Local AI completion</h2>
+        <section class="card">
+          <div id="slmToggle"></div>
+          <div class="row stacked">
+            <span class="text">
+              <span class="title">Model</span>
+              <span class="desc">Larger models suggest better code but take longer to load and respond.</span>
+            </span>
+            <div id="slmModel" class="models" role="radiogroup" aria-label="Model"></div>
+          </div>
+          <p class="note">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 14 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5v-5A1.5 1.5 0 0 1 3.5 7H4Zm1.5 0h5V5a2.5 2.5 0 0 0-5 0v2Z" /></svg>
+            <span>Runs on your CPU. Only the code in the editor is used as context, and nothing is sent to a server.
+              Models not included with the extension are downloaded once from Hugging Face and cached in this browser.</span>
           </p>
         </section>
 
-        <section>
-          <h2>Compiler flags</h2>
-          <label for="compileFlags" class="hint">Written to clangd's compile flags, one per line.</label>
-          <textarea id="compileFlags" rows="6" spellcheck="false"></textarea>
-          <button type="button" id="resetFlags" class="link">Restore defaults</button>
+        <h2>Compiler flags</h2>
+        <section class="card">
+          <div class="row stacked">
+            <span class="text">
+              <span class="title">clangd flags</span>
+              <span class="desc">Written to clangd's compile flags, one per line.</span>
+            </span>
+            <textarea id="compileFlags" rows="5" spellcheck="false" aria-label="Compiler flags"></textarea>
+            <button type="button" id="resetFlags" class="ghost">Restore defaults</button>
+          </div>
         </section>
-
-        <footer>
-          <button type="submit" id="save">Save</button>
-          <span id="status" role="status" aria-live="polite"></span>
-        </footer>
       </form>
     </main>
+    <div id="status" class="toast" role="status" aria-live="polite"></div>
     <script type="module" src="./options.ts"></script>
   </body>
 </html>

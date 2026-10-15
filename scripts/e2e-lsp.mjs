@@ -374,8 +374,8 @@ try {
     if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text);
     return r.result.value;
   };
-  await waitFor(() => evO(`return document.querySelectorAll('#features input').length === 13 && document.getElementById('compileFlags').value.includes('-std')`), 10000, 'options rendered');
-  const optInfo = await evO(`return { n: document.querySelectorAll('#features input').length, models: [...document.querySelectorAll('#slmModel option')].map(o => o.textContent), flags: document.getElementById('compileFlags').value };`);
+  await waitFor(() => evO(`return document.querySelectorAll('[data-feature]').length === 13 && document.getElementById('compileFlags').value.includes('-std')`), 10000, 'options rendered');
+  const optInfo = await evO(`return { n: document.querySelectorAll('[data-feature]').length, models: [...document.querySelectorAll('#slmModel .model')].map(o => o.textContent), flags: document.getElementById('compileFlags').value };`);
   check('options: 13 feature toggles, models with sizes, flags', optInfo.n === 13 && optInfo.models.every((t) => /MB|GB/.test(t)), JSON.stringify(optInfo));
   // inlineCompletion: first confirm dismissed -> stays off; second accepted -> on
   await evO(`document.getElementById('feature-inlineCompletion').click(); return 1;`);
@@ -387,18 +387,18 @@ try {
   check('options: enabling SLM asks to confirm the download size', dialogs.length === 2 && /400 MB/.test(dialogs[0]) && !afterDismiss && afterAccept, JSON.stringify({ dialogs, afterDismiss, afterAccept }));
   await evO(`document.getElementById('feature-inlineCompletion').click(); return 1;`); // back off
 
-  // toggle diagnostics + hover off, save → live in page
-  await evO(`document.getElementById('feature-diagnostics').click(); document.getElementById('feature-hover').click(); document.getElementById('save').click(); return 1;`);
+  // toggle diagnostics + hover off (autosaved) → live in page
+  await evO(`document.getElementById('feature-diagnostics').click(); document.getElementById('feature-hover').click(); return 1;`);
   await sleep(800);
   const saved = await evO(`return { status: document.getElementById('status').textContent, s: (await chrome.storage.sync.get('settings')).settings.features }`);
-  check('options: Save persists settings', saved.status === 'Saved' && saved.s.diagnostics === false && saved.s.hover === false, JSON.stringify(saved));
+  check('options: toggles autosave', saved.status === 'Saved' && saved.s.diagnostics === false && saved.s.hover === false, JSON.stringify(saved));
   const live = await ev(`${PRE}
     await new Promise(r => setTimeout(r, 500));
     const ln = model.getLinesContent().findIndex(l => l.includes('printf(')) + 1;
     const h = await exec('_executeHoverProvider', model.uri, P(ln, model.getLineContent(ln).indexOf('printf') + 2));
     return { markers: M.editor.getModelMarkers({ owner: 'clangd' }).length, hover: h.length };`);
   check('toggles apply live: markers cleared, hover provider gone', live.markers === 0 && live.hover === 0, JSON.stringify(live));
-  await evO(`document.getElementById('feature-diagnostics').click(); document.getElementById('feature-hover').click(); document.getElementById('save').click(); return 1;`);
+  await evO(`document.getElementById('feature-diagnostics').click(); document.getElementById('feature-hover').click(); return 1;`);
   const back = await waitFor(() => ev(`${PRE} const n = M.editor.getModelMarkers({ owner: 'clangd' }).length; return n || null;`), 15000, 'markers back').catch(() => 0);
   check('re-enabling diagnostics restores markers', back > 0, back);
   const oshot = await cdp.send('Page.captureScreenshot', { format: 'png' }, O);
