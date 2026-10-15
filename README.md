@@ -20,8 +20,11 @@ original Ace editor stays on the page, hidden, and is kept in sync. You can swit
 
 ## Install (no build)
 
-1. Download the latest `cycu-cal-extension-<version>.zip` from
-   [Releases](../../releases), or the `cycu-cal-extension` artifact of a CI run, and unzip it.
+1. Download the latest release from [Releases](../../releases) (or the matching artifact of a CI run) and unzip it:
+   - `cycu-cal-extension-<version>.zip` (~27 MB): AI completion downloads its model from Hugging Face the
+     first time you turn it on.
+   - `cycu-cal-extension-<version>-offline.zip` (~400 MB): Qwen2.5-Coder 0.5B is included, so nothing is
+     downloaded. The 1.5B model can still be downloaded from the options page.
 2. Open `chrome://extensions` (or `brave://extensions`) and turn on **Developer mode**.
 3. Click **Load unpacked** and select the unzipped folder (the one containing `manifest.json`).
 
@@ -33,11 +36,13 @@ Requires Node 24+ and pnpm.
 pnpm install
 pnpm build        # → dist/  (load this folder unpacked)
 pnpm package      # → release/cycu-cal-extension-<version>.zip
+pnpm package:offline  # → release/cycu-cal-extension-<version>-offline.zip (bundles the 0.5B model)
 pnpm dev          # rebuild on change
 ```
 
 The clangd runtime (~127 MB) is not committed. `scripts/fetch-vendor.mjs` downloads it into `vendor/` on the
-first build and verifies its pinned SHA-256. CI caches it.
+first build and verifies its pinned SHA-256. CI caches it. The offline build also fetches the model weights into
+`vendor/models/`, pinned (revision + SHA-256) in `SLM_MODELS` in `src/shared/protocol.ts`.
 
 ## Layout
 
