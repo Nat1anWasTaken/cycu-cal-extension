@@ -115,11 +115,13 @@ label.row { cursor: pointer; }
 .note svg { flex: none; width: 14px; height: 14px; margin-top: 2px; fill: currentColor; }
 
 /* Compiler flags */
-textarea {
+textarea, input[type='text'] {
   width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
   font-family: var(--mono); font-size: 13px; line-height: 1.6; resize: vertical;
 }
-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+textarea:focus, input[type='text']:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+input[type='text'] { line-height: 1.4; }
+.desc code { font-family: var(--mono); font-size: 12px; }
 button.ghost {
   align-self: flex-start; padding: 5px 12px; border: 1px solid var(--border); border-radius: 7px;
   background: var(--card); font-size: 13px; cursor: pointer;

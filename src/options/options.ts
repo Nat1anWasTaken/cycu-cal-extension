@@ -11,6 +11,7 @@ const form = $<HTMLFormElement>('form');
 const featuresEl = $<HTMLElement>('features');
 const useMonaco = $<HTMLInputElement>('useMonaco');
 const minimap = $<HTMLInputElement>('minimap');
+const fontFamily = $<HTMLInputElement>('fontFamily');
 const slmModel = $<HTMLDivElement>('slmModel');
 const compileFlags = $<HTMLTextAreaElement>('compileFlags');
 const statusEl = $<HTMLDivElement>('status');
@@ -69,6 +70,7 @@ function render(s: Settings): void {
   useMonaco.checked = s.useMonaco;
   $<HTMLInputElement>(`theme-${s.theme}`).checked = true;
   minimap.checked = s.minimap;
+  if (document.activeElement !== fontFamily) fontFamily.value = s.fontFamily;
   radios.get(s.slmModel)!.checked = true;
   if (document.activeElement !== compileFlags) compileFlags.value = s.compileFlags.join('\n');
   for (const id of featureIds) boxes.get(id)!.checked = s.features[id];
@@ -82,6 +84,7 @@ function read(): Partial<Settings> {
     useMonaco: useMonaco.checked,
     theme: $<HTMLInputElement>('theme-dark').checked ? 'dark' : 'light',
     minimap: minimap.checked,
+    fontFamily: fontFamily.value.trim(),
     slmModel: selectedModel(),
     compileFlags: compileFlags.value.split('\n').map((l) => l.trim()).filter(Boolean),
     features,
@@ -143,7 +146,7 @@ const slmBox = boxes.get('inlineCompletion')!;
 let lastModel = DEFAULT_SETTINGS.slmModel;
 form.addEventListener('change', (e) => {
   const t = e.target;
-  if (t === compileFlags) return; // saved while typing
+  if (t === compileFlags || t === fontFamily) return; // saved while typing
   if (t === slmBox && slmBox.checked && !confirmDownload(selectedModel())) slmBox.checked = false;
   if (t instanceof HTMLInputElement && t.name === 'slmModel') {
     if (slmBox.checked && !confirmDownload(selectedModel())) radios.get(lastModel)!.checked = true;
@@ -153,11 +156,13 @@ form.addEventListener('change', (e) => {
   void save();
 });
 
-let flagsTimer: ReturnType<typeof setTimeout> | undefined;
-compileFlags.addEventListener('input', () => {
-  clearTimeout(flagsTimer);
-  flagsTimer = setTimeout(save, 600);
-});
+let typingTimer: ReturnType<typeof setTimeout> | undefined;
+for (const field of [compileFlags, fontFamily]) {
+  field.addEventListener('input', () => {
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(save, 600);
+  });
+}
 
 $<HTMLButtonElement>('resetFlags').addEventListener('click', () => {
   compileFlags.value = DEFAULT_SETTINGS.compileFlags.join('\n');

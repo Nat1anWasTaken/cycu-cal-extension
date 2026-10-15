@@ -113,6 +113,13 @@ export function themeFor(settings: Settings): string {
   return settings.theme === 'dark' ? 'cal-dark' : 'cal-light';
 }
 
+/** The user's fonts first, then the site's mono stack (which also covers CJK). */
+function fontFamilyFor(settings: Settings): string {
+  const base = 'var(--cal-font-mono, monospace)';
+  const custom = settings.fontFamily.trim().replace(/[;,\s]+$/, '');
+  return custom ? `${custom}, ${base}` : base;
+}
+
 export function createEditor(
   host: HTMLElement,
   model: monaco.editor.ITextModel,
@@ -127,7 +134,7 @@ export function createEditor(
     tabSize: 2,
     insertSpaces: false,
     detectIndentation: false,
-    fontFamily: 'var(--cal-font-mono, monospace)',
+    fontFamily: fontFamilyFor(settings),
     fontSize: 16,
     automaticLayout: true,
     dragAndDrop: false,
@@ -151,7 +158,7 @@ export function createModel(value: string, uri: string): monaco.editor.ITextMode
 export function applyEditorSettings(ed: monaco.editor.IStandaloneCodeEditor, settings: Settings): void {
   setupOnce();
   monaco.editor.setTheme(themeFor(settings));
-  ed.updateOptions({ minimap: { enabled: settings.minimap } });
+  ed.updateOptions({ minimap: { enabled: settings.minimap }, fontFamily: fontFamilyFor(settings) });
 }
 
 /** Replace the model text with one minimal, undoable edit (keeps cursor/scroll where possible). */

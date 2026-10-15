@@ -40,6 +40,8 @@ export interface Settings {
   compileFlags: string[];
   theme: 'light' | 'dark';
   minimap: boolean;
+  /** CSS font-family list for the editor; empty uses the site's monospace font. */
+  fontFamily: string;
   slmModel: SlmModelId;
 }
 
@@ -63,6 +65,7 @@ export const DEFAULT_SETTINGS: Settings = {
   compileFlags: ['-xc', '-std=gnu11', '-Wall', '-Wextra'],
   theme: 'light',
   minimap: false,
+  fontFamily: '',
   slmModel: 'qwen2.5-coder-0.5b',
 };
 
