@@ -3,6 +3,7 @@
 //   node scripts/e2e-slm.mjs            # build into /tmp/cal-dist-slm, then test
 //   SKIP_BUILD=1 node scripts/e2e-slm.mjs
 //   MODEL=qwen2.5-coder-1.5b node scripts/e2e-slm.mjs
+//   OFFLINE=1 node scripts/e2e-slm.mjs   # offline build; Hugging Face is unreachable, nothing may download
 //
 // Launches a separate headless Brave with a fresh temp profile and the built extension,
 // connects SLM_PORT from the background service worker (an extension context, so the
@@ -20,6 +21,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = process.env.OUT_DIR || '/tmp/cal-dist-slm';
 const MODEL = process.env.MODEL || 'qwen2.5-coder-0.5b';
 const PORT = Number(process.env.CDP_PORT || 9357);
+const OFFLINE = process.env.OFFLINE === '1';
 const BRAVE = process.env.BRAVE || '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -30,7 +32,7 @@ const check = (name, ok, info = '') => {
 };
 
 if (!process.env.SKIP_BUILD) {
-  execFileSync('node', [join(root, 'scripts/build.mjs')], { stdio: 'inherit', env: { ...process.env, OUT_DIR } });
+  execFileSync('node', [join(root, 'scripts/build.mjs'), ...(OFFLINE ? ['--offline'] : [])], { stdio: 'inherit', env: { ...process.env, OUT_DIR } });
 }
 
 async function cdp(wsUrl, label) {
@@ -94,6 +96,7 @@ async function launch(profile) {
       `--disable-extensions-except=${OUT_DIR}`,
       '--no-first-run',
       '--no-default-browser-check',
+      ...(OFFLINE ? ['--host-resolver-rules=MAP huggingface.co ~NOTFOUND, MAP *.huggingface.co ~NOTFOUND, MAP *.hf.co ~NOTFOUND'] : []),
       'about:blank',
     ],
     { stdio: 'ignore' },
@@ -163,14 +166,15 @@ async function load(sw, label) {
 const profile = mkdtempSync(join(tmpdir(), 'cal-slm-e2e-'));
 let browser;
 try {
-  // ---- run 1: fresh profile, real download --------------------------------------------
+  // ---- run 1: fresh profile, real download (or bundled model when OFFLINE) -------------
   browser = await launch(profile);
   const { sw, off } = browser;
   check('offscreen crossOriginIsolated', (await off.evaluate('self.crossOriginIsolated')) === true);
 
   const first = await load(sw, 'run 1');
   check('first load reaches ready', first.last.status === 'ready', `${first.statuses}; ${(first.ms / 1000).toFixed(1)} s; ${first.last.detail ?? ''}`);
-  check('first load reports downloading progress', first.sawDownload);
+  if (OFFLINE) check('first load does not download', !first.sawDownload, first.statuses);
+  else check('first load reports downloading progress', first.sawDownload);
   if (first.last.status !== 'ready') throw new Error(`load failed: ${first.last.detail}`);
 
   const cases = [
