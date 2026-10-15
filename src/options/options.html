@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CYCU CAL Code Editor – Options</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>CYCU CAL Code Editor</h1>
+      <form id="form" autocomplete="off">
+        <section>
+          <h2>Editor</h2>
+          <label class="row"><input type="checkbox" id="useMonaco" /> Use the Monaco editor instead of the site's editor</label>
+          <label class="row">
+            <span class="label">Theme</span>
+            <select id="theme">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+          <label class="row"><input type="checkbox" id="minimap" /> Show minimap</label>
+        </section>
+
+        <section>
+          <h2>Language features</h2>
+          <p class="hint">Changes apply to open editors immediately after saving.</p>
+          <div id="features" class="features"></div>
+        </section>
+
+        <section>
+          <h2>Local AI completion</h2>
+          <label class="row">
+            <span class="label">Model</span>
+            <select id="slmModel"></select>
+          </label>
+          <p class="hint">
+            The model is downloaded once from Hugging Face and cached in this browser. Only the code in the editor is
+            used as context; nothing is sent to a server.
+          </p>
+        </section>
+
+        <section>
+          <h2>Compiler flags</h2>
+          <label for="compileFlags" class="hint">Written to clangd's compile flags, one per line.</label>
+          <textarea id="compileFlags" rows="6" spellcheck="false"></textarea>
+          <button type="button" id="resetFlags" class="link">Restore defaults</button>
+        </section>
+
+        <footer>
+          <button type="submit" id="save">Save</button>
+          <span id="status" role="status" aria-live="polite"></span>
+        </footer>
+      </form>
+    </main>
+    <script type="module" src="./options.ts"></script>
+  </body>
+</html>
