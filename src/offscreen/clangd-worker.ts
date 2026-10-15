@@ -29,7 +29,7 @@ function systemFlags(userFlags: string[]): string[] {
   const isC = userFlags.some((f) => f === '-xc' || f === '--language=c' || /^-std=(gnu|c)\d/.test(f));
   return ['--target=wasm32-wasi', ...(isC ? [] : CXX_INCLUDE_FLAGS), ...C_INCLUDE_FLAGS];
 }
-const CLANG_FORMAT = 'BasedOnStyle: LLVM\nUseTab: Always\nIndentWidth: 2\nTabWidth: 2\n';
+const CLANG_FORMAT = 'BasedOnStyle: LLVM\nUseTab: Never\nIndentWidth: 2\nTabWidth: 2\n';
 const MAIN_ARGS = [
   '--background-index=false',
   '--clang-tidy=false',

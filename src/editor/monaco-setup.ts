@@ -132,7 +132,7 @@ export function createEditor(
     model,
     readOnly,
     tabSize: 2,
-    insertSpaces: false,
+    insertSpaces: true,
     detectIndentation: false,
     fontFamily: fontFamilyFor(settings),
     fontSize: 16,
