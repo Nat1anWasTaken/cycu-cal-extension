@@ -4,3 +4,4 @@ dist-*
 release
 vendor
 *.part
+.DS_Store
