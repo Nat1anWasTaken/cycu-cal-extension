@@ -33,7 +33,7 @@ jobs:
           path: vendor/clangd
           key: vendor-${{ hashFiles('scripts/fetch-vendor.mjs') }}
 
-      # Model weights for the offline build (~400 MB), pinned in src/shared/protocol.ts.
+      # Model weights for the offline builds (~400 MB + ~990 MB), pinned in src/shared/protocol.ts.
       - uses: actions/cache@v4
         with:
           path: vendor/models
@@ -43,9 +43,13 @@ jobs:
 
       - run: pnpm package
 
-      - run: pnpm package:offline
+      - run: pnpm package:offline-0.5b
         env:
-          OUT_DIR: dist-offline
+          OUT_DIR: dist-offline-0.5b
+
+      - run: pnpm package:offline-1.5b
+        env:
+          OUT_DIR: dist-offline-1.5b
 
       - uses: actions/upload-artifact@v4
         with:
@@ -57,10 +61,17 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cycu-cal-extension-offline
-          path: dist-offline/
+          name: cycu-cal-extension-offline-0.5b
+          path: dist-offline-0.5b/
           if-no-files-found: error
-          # The weights are already compressed; skip re-compressing ~400 MB.
+          # The weights are already compressed; skip re-compressing them.
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cycu-cal-extension-offline-1.5b
+          path: dist-offline-1.5b/
+          if-no-files-found: error
           compression-level: 0
 
       # Every push to main becomes a release tagged "<UTC date>-<short sha>", e.g. 2026-10-16-0754622.
