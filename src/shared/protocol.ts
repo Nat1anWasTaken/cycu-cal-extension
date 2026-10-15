@@ -110,7 +110,7 @@ export interface ReadFileResult {
 
 /** Port messages content → offscreen on SLM_PORT. */
 export type SlmPortIn =
-  | { type: 'load'; modelId: SlmModelId }
+  | { type: 'load'; modelId: SlmModelId; contextTokens: SlmContextTokens }
   | { type: 'complete'; id: number; prefix: string; suffix: string; maxTokens: number }
   | { type: 'cancel'; id: number };
 
@@ -123,6 +123,10 @@ export type SlmPortOut =
 export type SlmStatus = 'idle' | 'downloading' | 'loading' | 'ready' | 'error';
 
 export type SlmModelId = 'qwen2.5-coder-0.5b' | 'qwen2.5-coder-1.5b';
+
+/** Prompt budgets (editor code, in estimated tokens) offered in the options page. */
+export const SLM_CONTEXT_SIZES = [1536, 3072, 6144] as const;
+export type SlmContextTokens = (typeof SLM_CONTEXT_SIZES)[number];
 
 export interface SlmModel {
   label: string;

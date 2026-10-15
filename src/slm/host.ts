@@ -11,18 +11,20 @@ import { isBundled } from '../shared/bundle';
 import {
   bundledModelPath,
   modelUrl,
+  SLM_CONTEXT_SIZES,
   SLM_MODELS,
+  type SlmContextTokens,
   type SlmModelId,
   type SlmPortIn,
   type SlmPortOut,
   type SlmStatus,
 } from '../shared/protocol';
-import { buildFimPrompt, cursorContext, postprocess, STOP_SEQUENCES, trimContext, DEFAULT_MAX_CONTEXT_TOKENS } from './fim';
+import { buildFimPrompt, cursorContext, postprocess, STOP_SEQUENCES, trimContext } from './fim';
 
 const WASM_PATH = 'wllama/wllama.wasm';
-/** Prompt (~1.5k tokens) + generation fits comfortably. */
-const N_CTX = 2048;
 const MAX_TOKENS_CAP = 128;
+/** n_ctx is the prompt budget plus this, for generation and token-estimate error. */
+const CTX_HEADROOM = 512;
 /** Free the model's memory after this long without any connected tab. */
 const IDLE_UNLOAD_MS = 10 * 60_000;
 /** Abort an in-progress download if no tab reconnects within this window (e.g. the feature was disabled). */
@@ -47,6 +49,9 @@ let status: StatusMsg = { status: 'idle' };
 let wllama: Wllama | null = null;
 let loadedModel: SlmModelId | null = null;
 let wantedModel: SlmModelId | null = null;
+/** Prompt budget the loaded / wanted model's n_ctx was sized for. */
+let loadedCtx: SlmContextTokens | null = null;
+let wantedCtx: SlmContextTokens | null = null;
 let downloadAc: AbortController | null = null;
 /** Serializes model loads/unloads. */
 let modelChain: Promise<void> = Promise.resolve();
@@ -78,7 +83,9 @@ export function attachSlmPort(port: chrome.runtime.Port): void {
   port.onMessage.addListener((msg: SlmPortIn) => {
     switch (msg?.type) {
       case 'load':
-        if (msg.modelId in SLM_MODELS) requestModel(msg.modelId);
+        if (msg.modelId in SLM_MODELS) {
+          requestModel(msg.modelId, SLM_CONTEXT_SIZES.includes(msg.contextTokens) ? msg.contextTokens : SLM_CONTEXT_SIZES[0]);
+        }
         else post(port, { type: 'status', status: 'error', detail: `unknown model ${msg.modelId}` });
         break;
       case 'complete':
@@ -109,15 +116,17 @@ export function attachSlmPort(port: chrome.runtime.Port): void {
 // Model lifecycle
 // ---------------------------------------------------------------------------
 
-function requestModel(id: SlmModelId): void {
-  if (id === wantedModel) {
+function requestModel(id: SlmModelId, ctx: SlmContextTokens): void {
+  if (id === wantedModel && ctx === wantedCtx) {
     // Already loaded or loading: just (re)announce the state.
     setStatus(status);
     return;
   }
+  // Only the model id matters for the download: a context-size change reuses the same file.
+  if (id !== wantedModel) downloadAc?.abort(); // a different model is loading: stop it
   wantedModel = id;
-  downloadAc?.abort(); // a different model is loading: stop it
-  modelChain = modelChain.then(() => switchTo(id)).catch(() => {});
+  wantedCtx = ctx;
+  modelChain = modelChain.then(() => switchTo(id, ctx)).catch(() => {});
 }
 
 function unload(): void {
@@ -130,14 +139,17 @@ function unload(): void {
       if (wllama) await wllama.exit().catch(() => {});
       wllama = null;
       loadedModel = null;
+      loadedCtx = null;
       status = { status: 'idle' };
     })
     .catch(() => {});
 }
 
-async function switchTo(id: SlmModelId): Promise<void> {
-  if (wantedModel !== id) return; // superseded while queued
-  if (wllama && loadedModel === id) {
+const superseded = (id: SlmModelId, ctx: SlmContextTokens) => wantedModel !== id || wantedCtx !== ctx;
+
+async function switchTo(id: SlmModelId, ctx: SlmContextTokens): Promise<void> {
+  if (superseded(id, ctx)) return; // superseded while queued
+  if (wllama && loadedModel === id && loadedCtx === ctx) {
     setStatus({ status: 'ready' });
     return;
   }
@@ -147,6 +159,7 @@ async function switchTo(id: SlmModelId): Promise<void> {
     await wllama.exit().catch(() => {});
     wllama = null;
     loadedModel = null;
+    loadedCtx = null;
   }
 
   const w = new Wllama(
@@ -160,20 +173,21 @@ async function switchTo(id: SlmModelId): Promise<void> {
       setStatus({ status: 'loading' });
       const res = await fetch(chrome.runtime.getURL(bundledModelPath(id)), { signal: ac.signal });
       if (!res.ok) throw new Error(`bundled model missing (HTTP ${res.status})`);
-      await w.loadModel([await res.blob()], { n_ctx: N_CTX });
+      await w.loadModel([await res.blob()], { n_ctx: ctx + CTX_HEADROOM });
     } else {
-      await download(w, id, ac.signal);
+      await download(w, id, ctx + CTX_HEADROOM, ac.signal);
     }
-    if (wantedModel !== id) {
+    if (superseded(id, ctx)) {
       await w.exit().catch(() => {});
       return;
     }
     wllama = w;
     loadedModel = id;
+    loadedCtx = ctx;
     setStatus({ status: 'ready', detail: `${SLM_MODELS[id].label}, ${w.isMultithread() ? w.getNumThreads() : 1} threads` });
   } catch (e) {
     await w.exit().catch(() => {});
-    if (wantedModel !== id) return; // aborted because the user switched / disabled
+    if (superseded(id, ctx)) return; // aborted because the user switched / disabled
     if (ac.signal.aborted) {
       wantedModel = null;
       status = { status: 'idle' };
@@ -187,13 +201,13 @@ async function switchTo(id: SlmModelId): Promise<void> {
 }
 
 /** Loads a non-bundled model from Hugging Face, through wllama's OPFS cache. */
-async function download(w: Wllama, id: SlmModelId, signal: AbortSignal): Promise<void> {
+async function download(w: Wllama, id: SlmModelId, nCtx: number, signal: AbortSignal): Promise<void> {
   const url = modelUrl(id);
   const cached = (await w.modelManager.getModels()).some((m) => m.url === url);
   setStatus(cached ? { status: 'loading' } : { status: 'downloading', progress: 0 });
   let lastPct = -1;
   await w.loadModelFromUrl(url, {
-    n_ctx: N_CTX,
+    n_ctx: nCtx,
     signal,
     progressCallback: ({ loaded, total }) => {
       if (wantedModel !== id) return;
@@ -224,11 +238,12 @@ async function generate(gen: Generation, msg: Extract<SlmPortIn, { type: 'comple
   try {
     if (gen.ac.signal.aborted) return fail('cancelled');
     const w = wllama;
-    if (!w || loadedModel !== wantedModel) return fail('model not ready');
+    const budget = loadedCtx;
+    if (!w || loadedModel !== wantedModel || budget === null || budget !== wantedCtx) return fail('model not ready');
 
+    const ctxText = trimContext(String(msg.prefix ?? ''), String(msg.suffix ?? ''), budget);
     // ONLY editor text around the cursor goes into the prompt.
-    const ctxText = trimContext(String(msg.prefix ?? ''), String(msg.suffix ?? ''), DEFAULT_MAX_CONTEXT_TOKENS);
-    const prompt = buildFimPrompt(ctxText.prefix, ctxText.suffix);
+    const prompt = buildFimPrompt(ctxText.prefix, ctxText.suffix, budget);
     const cursor = cursorContext(ctxText.prefix, ctxText.suffix, TAB_SIZE);
     const maxTokens = Math.max(1, Math.min(MAX_TOKENS_CAP, Math.floor(Number(msg.maxTokens) || 64)));
 

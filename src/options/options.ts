@@ -2,7 +2,7 @@
 // Every change is saved immediately; the toast in #status confirms it.
 
 import { isBundled } from '../shared/bundle';
-import { SLM_MODELS, type SlmModelId } from '../shared/protocol';
+import { SLM_CONTEXT_SIZES, SLM_MODELS, type SlmContextTokens, type SlmModelId } from '../shared/protocol';
 import { DEFAULT_SETTINGS, FEATURE_LABELS, loadSettings, saveSettings, type FeatureId, type Settings } from '../shared/settings';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -16,6 +16,7 @@ const showClangdBadge = $<HTMLInputElement>('showClangdBadge');
 const showSlmBadge = $<HTMLInputElement>('showSlmBadge');
 const showFormatButton = $<HTMLInputElement>('showFormatButton');
 const slmModel = $<HTMLDivElement>('slmModel');
+const slmContext = $<HTMLSpanElement>('slmContext');
 const compileFlags = $<HTMLTextAreaElement>('compileFlags');
 const statusEl = $<HTMLDivElement>('status');
 
@@ -78,6 +79,7 @@ function render(s: Settings): void {
   showSlmBadge.checked = s.showSlmBadge;
   showFormatButton.checked = s.showFormatButton;
   radios.get(s.slmModel)!.checked = true;
+  $<HTMLInputElement>(`slmContext-${s.slmContextTokens}`).checked = true;
   if (document.activeElement !== compileFlags) compileFlags.value = s.compileFlags.join('\n');
   for (const id of featureIds) boxes.get(id)!.checked = s.features[id];
   syncModelState();
@@ -95,6 +97,7 @@ function read(): Partial<Settings> {
     showSlmBadge: showSlmBadge.checked,
     showFormatButton: showFormatButton.checked,
     slmModel: selectedModel(),
+    slmContextTokens: Number(slmContext.querySelector<HTMLInputElement>('input:checked')?.value ?? DEFAULT_SETTINGS.slmContextTokens) as SlmContextTokens,
     compileFlags: compileFlags.value.split('\n').map((l) => l.trim()).filter(Boolean),
     features,
   };
@@ -143,6 +146,16 @@ for (const id of modelIds) {
   row.append(radio, title, badge);
   slmModel.append(row);
   radios.set(id, radio);
+}
+for (const size of SLM_CONTEXT_SIZES) {
+  const radio = el('input', '');
+  radio.type = 'radio';
+  radio.name = 'slmContext';
+  radio.id = `slmContext-${size}`;
+  radio.value = String(size);
+  const label = el('label', '', `${size / 1024}K`);
+  label.htmlFor = radio.id;
+  slmContext.append(radio, label);
 }
 try {
   $('version').textContent = `v${chrome.runtime.getManifest().version}`;

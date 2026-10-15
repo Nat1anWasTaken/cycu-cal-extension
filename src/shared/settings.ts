@@ -1,7 +1,7 @@
 // User settings, persisted in chrome.storage.sync and shared by the content script and options page.
 
 import { BUNDLED_MODELS } from './bundle';
-import type { SlmModelId } from './protocol';
+import { SLM_CONTEXT_SIZES, type SlmContextTokens, type SlmModelId } from './protocol';
 
 export type FeatureId =
   | 'diagnostics'
@@ -50,6 +50,8 @@ export interface Settings {
   /** Show a "Format" button in the page toolbar (only while formatting is on). */
   showFormatButton: boolean;
   slmModel: SlmModelId;
+  /** Prompt budget for local AI completion; larger fits more code but responds slower. */
+  slmContextTokens: SlmContextTokens;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -78,6 +80,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showFormatButton: true,
   // An offline build defaults to the model it ships with.
   slmModel: BUNDLED_MODELS[0] ?? 'qwen2.5-coder-0.5b',
+  slmContextTokens: 1536,
 };
 
 const KEY = 'settings';
@@ -103,9 +106,11 @@ export function onSettingsChanged(cb: (s: Settings) => void): () => void {
 }
 
 function mergeSettings(raw: Partial<Settings> | undefined): Settings {
-  return {
+  const s: Settings = {
     ...DEFAULT_SETTINGS,
     ...raw,
     features: { ...DEFAULT_SETTINGS.features, ...raw?.features },
   };
+  if (!SLM_CONTEXT_SIZES.includes(s.slmContextTokens)) s.slmContextTokens = DEFAULT_SETTINGS.slmContextTokens;
+  return s;
 }

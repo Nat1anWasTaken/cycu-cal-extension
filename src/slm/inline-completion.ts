@@ -5,7 +5,7 @@
 // ever sent: never the problem statement or other page content.
 
 import type * as Monaco from 'monaco-editor/editor/editor.api.js';
-import { SLM_PORT, type EnsureOffscreenResponse, type SlmModelId, type SlmPortIn, type SlmPortOut, type SlmStatus, type ToBackground } from '../shared/protocol';
+import { SLM_PORT, type EnsureOffscreenResponse, type SlmPortIn, type SlmPortOut, type SlmStatus, type ToBackground } from '../shared/protocol';
 import type { Settings } from '../shared/settings';
 import { trimContext } from './fim';
 
@@ -20,15 +20,13 @@ export interface InlineCompletionOptions {
 }
 
 export interface InlineCompletion {
-  /** Enables/disables (settings.features.inlineCompletion) or switches model (settings.slmModel). */
+  /** Enables/disables (settings.features.inlineCompletion) or switches model / context size (settings.slmModel, settings.slmContextTokens). */
   updateSettings(settings: Settings): void;
   dispose(): void;
 }
 
 const DEBOUNCE_MS = 300;
 const MAX_TOKENS = 64;
-/** Context sent over the port; the host trims to the same budget again. */
-const MAX_CONTEXT_TOKENS = 1536;
 const RECONNECT_MIN_MS = 1000;
 const RECONNECT_MAX_MS = 30_000;
 
@@ -40,7 +38,8 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
   let provider: Monaco.IDisposable | null = null;
   let port: chrome.runtime.Port | null = null;
   let connecting = false;
-  let sentModel: SlmModelId | null = null;
+  /** `${modelId}@${contextTokens}` last sent in a `load`, so unchanged settings don't resend it. */
+  let sentLoad: string | null = null;
   let status: SlmStatus = 'idle';
   let reconnectDelay = RECONNECT_MIN_MS;
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -78,8 +77,9 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
   }
 
   function sendLoad(): void {
-    if (port && sentModel !== settings.slmModel && send({ type: 'load', modelId: settings.slmModel })) {
-      sentModel = settings.slmModel;
+    const key = `${settings.slmModel}@${settings.slmContextTokens}`;
+    if (port && sentLoad !== key && send({ type: 'load', modelId: settings.slmModel, contextTokens: settings.slmContextTokens })) {
+      sentLoad = key;
     }
   }
 
@@ -109,13 +109,13 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
       if (!res?.ok) throw new Error(res?.error ?? 'offscreen document unavailable');
       const p = chrome.runtime.connect({ name: SLM_PORT });
       port = p;
-      sentModel = null;
+      sentLoad = null;
       p.onMessage.addListener(onPortMessage);
       p.onDisconnect.addListener(() => {
         void chrome.runtime.lastError; // silence "Unchecked runtime.lastError"
         if (port !== p) return;
         port = null;
-        sentModel = null;
+        sentLoad = null;
         settle(null);
         if (enabled()) {
           report('loading', undefined, 'reconnecting');
@@ -145,7 +145,7 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
     settle(null);
     const p = port;
     port = null;
-    sentModel = null;
+    sentLoad = null;
     try {
       p?.disconnect();
     } catch {
@@ -184,7 +184,8 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
         const ctx = trimContext(
           m.getValueInRange(new monaco.Range(1, 1, position.lineNumber, position.column), lf),
           m.getValueInRange(new monaco.Range(position.lineNumber, position.column, lastLine, m.getLineMaxColumn(lastLine)), lf),
-          MAX_CONTEXT_TOKENS,
+          // The host trims to the same budget again.
+          settings.slmContextTokens,
         );
         if (!ctx.prefix.trim()) return undefined;
         const version = m.getVersionId();
