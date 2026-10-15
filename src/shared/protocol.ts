@@ -130,7 +130,7 @@ export interface SlmModel {
   /** Pinned commit of `repo`, so upstream edits can't swap the weights. */
   revision: string;
   file: string;
-  /** SHA-256 of `file` (Hugging Face's LFS etag). */
+  /** SHA-256 of `file` (Hugging Face's LFS etag); checked when the model is bundled at build time. */
   sha256: string;
   approxMB: number;
 }
@@ -154,8 +154,15 @@ export const SLM_MODELS: Record<SlmModelId, SlmModel> = {
   },
 };
 
+/** Model bundled into the offline build (`pnpm package --offline`). */
+export const OFFLINE_MODEL: SlmModelId = 'qwen2.5-coder-0.5b';
+
 export function modelUrl(id: SlmModelId): string {
   const m = SLM_MODELS[id];
   return `https://huggingface.co/${m.repo}/resolve/${m.revision}/${m.file}`;
 }
 
+/** Path of a bundled model, relative to vendor/ at build time and to the extension root at run time. */
+export function bundledModelPath(id: SlmModelId): string {
+  return `models/${SLM_MODELS[id].file}`;
+}

@@ -30,7 +30,7 @@ export const FEATURE_LABELS: Record<FeatureId, string> = {
   inlayHints: 'Inlay hints',
   semanticTokens: 'Semantic highlighting',
   documentLinks: '#include links',
-  inlineCompletion: 'Local AI ghost-text completion (downloads a model)',
+  inlineCompletion: 'Local AI ghost-text completion',
 };
 
 export interface Settings {

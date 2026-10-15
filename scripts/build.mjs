@@ -3,6 +3,7 @@
 //   pnpm build            # fetch vendor files (if needed) + build dist/
 //   pnpm build --watch    # rebuild on change (vendor fetched once)
 //   pnpm package          # build + zip to release/cycu-cal-extension-<version>.zip
+//   pnpm package:offline  # same, with the default model bundled → ...-<version>-offline.zip
 //
 // Content scripts cannot be ES modules, so they are built separately as self-contained
 // IIFE bundles. Extension pages (background, offscreen, options) and their workers are
@@ -13,6 +14,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
+import { bundledModelPath, OFFLINE_MODEL } from '../src/shared/protocol.ts';
 import { fetchVendor } from './fetch-vendor.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -20,6 +22,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = process.env.OUT_DIR ? resolve(process.env.OUT_DIR) : join(root, 'dist');
 const watch = process.argv.includes('--watch');
 const zip = process.argv.includes('--zip');
+// --offline bundles the model into the package, so local completion needs no network.
+const bundledModels = process.argv.includes('--offline') ? [OFFLINE_MODEL] : [];
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 
 const common = {
@@ -27,7 +31,10 @@ const common = {
   configFile: false,
   logLevel: 'warn',
   publicDir: false,
-  define: { 'process.env.NODE_ENV': JSON.stringify(watch ? 'development' : 'production') },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(watch ? 'development' : 'production'),
+    __BUNDLED_MODELS__: JSON.stringify(bundledModels),
+  },
 };
 
 /** Extension pages + background + their (module) workers. */
@@ -95,6 +102,7 @@ function copyStatic() {
   cpSync(join(root, 'vendor/clangd/clangd.wasm'), join(dist, 'clangd/clangd.wasm'));
   const wllamaWasm = join(root, 'node_modules/@wllama/wllama/esm/wasm/wllama.wasm');
   if (existsSync(wllamaWasm)) cpSync(wllamaWasm, join(dist, 'wllama/wllama.wasm'));
+  for (const id of bundledModels) cpSync(join(root, 'vendor', bundledModelPath(id)), join(dist, bundledModelPath(id)));
   if (existsSync(join(root, 'icons'))) cpSync(join(root, 'icons'), join(dist, 'icons'), { recursive: true });
 }
 
@@ -125,13 +133,14 @@ function writeManifest() {
 function packageZip() {
   const out = join(root, 'release');
   mkdirSync(out, { recursive: true });
-  const file = join(out, `cycu-cal-extension-${pkg.version}.zip`);
+  const file = join(out, `cycu-cal-extension-${pkg.version}${bundledModels.length ? '-offline' : ''}.zip`);
   rmSync(file, { force: true });
-  execFileSync('zip', ['-qr', '-9', file, '.'], { cwd: dist, stdio: 'inherit' });
+  // GGUF weights barely compress; storing them (-n) saves minutes of zip time.
+  execFileSync('zip', ['-qr', '-9', '-n', '.gguf', file, '.'], { cwd: dist, stdio: 'inherit' });
   console.log(`packaged ${file}`);
 }
 
-await fetchVendor();
+await fetchVendor({ models: bundledModels });
 if (!watch) rmSync(dist, { recursive: true, force: true });
 copyStatic();
 

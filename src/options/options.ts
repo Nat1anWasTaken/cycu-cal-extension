@@ -1,5 +1,6 @@
 // Extension options page: feature toggles, editor look, SLM model and clangd compile flags.
 
+import { isBundled } from '../shared/bundle';
 import { SLM_MODELS, type SlmModelId } from '../shared/protocol';
 import { DEFAULT_SETTINGS, FEATURE_LABELS, loadSettings, saveSettings, type FeatureId, type Settings } from '../shared/settings';
 
@@ -23,6 +24,7 @@ function sizeText(id: SlmModelId): string {
 }
 
 function confirmDownload(id: SlmModelId): boolean {
+  if (isBundled(id)) return true;
   const m = SLM_MODELS[id];
   return confirm(
     `Local AI completion downloads ${m.label} (about ${sizeText(id)}) from Hugging Face (${m.repo}).\n\n` +
@@ -69,7 +71,7 @@ for (const id of featureIds) {
   boxes.set(id, box);
 }
 for (const [id, m] of Object.entries(SLM_MODELS) as Array<[SlmModelId, (typeof SLM_MODELS)[SlmModelId]]>) {
-  slmModel.append(new Option(`${m.label} – ~${sizeText(id)}`, id));
+  slmModel.append(new Option(`${m.label} – ${isBundled(id) ? 'included' : `~${sizeText(id)} download`}`, id));
 }
 
 // Enabling inline completion (or switching to another model while enabled) downloads weights: ask first.

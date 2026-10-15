@@ -3,10 +3,20 @@
 // cross-origin-isolated offscreen doc) serves all tabs; only one generation runs at a time.
 //
 // The model is downloaded from Hugging Face on the first `load` only (i.e. only once the user
-// has enabled the feature) and cached in OPFS by wllama's CacheManager.
+// has enabled the feature) and cached in OPFS by wllama's CacheManager. Models bundled into the
+// offline build are read straight from the extension package instead (no network, no OPFS copy).
 
 import { LoggerWithoutDebug, Wllama, WllamaAbortError } from '@wllama/wllama';
-import { modelUrl, SLM_MODELS, type SlmModelId, type SlmPortIn, type SlmPortOut, type SlmStatus } from '../shared/protocol';
+import { isBundled } from '../shared/bundle';
+import {
+  bundledModelPath,
+  modelUrl,
+  SLM_MODELS,
+  type SlmModelId,
+  type SlmPortIn,
+  type SlmPortOut,
+  type SlmStatus,
+} from '../shared/protocol';
 import { buildFimPrompt, cursorContext, postprocess, STOP_SEQUENCES, trimContext, DEFAULT_MAX_CONTEXT_TOKENS } from './fim';
 
 const WASM_PATH = 'wllama/wllama.wasm';
@@ -139,7 +149,6 @@ async function switchTo(id: SlmModelId): Promise<void> {
     loadedModel = null;
   }
 
-  const url = modelUrl(id);
   const w = new Wllama(
     { default: chrome.runtime.getURL(WASM_PATH) },
     { logger: LoggerWithoutDebug, suppressNativeLog: true, allowOffline: true },
@@ -147,22 +156,14 @@ async function switchTo(id: SlmModelId): Promise<void> {
   const ac = new AbortController();
   downloadAc = ac;
   try {
-    const cached = (await w.modelManager.getModels()).some((m) => m.url === url);
-    setStatus(cached ? { status: 'loading' } : { status: 'downloading', progress: 0 });
-    let lastPct = -1;
-    await w.loadModelFromUrl(url, {
-      n_ctx: N_CTX,
-      signal: ac.signal,
-      progressCallback: ({ loaded, total }) => {
-        if (wantedModel !== id) return;
-        if (total > 0 && loaded < total) {
-          const pct = Math.floor((loaded / total) * 100);
-          if (pct !== lastPct) setStatus({ status: 'downloading', progress: (lastPct = pct) });
-        } else if (status.status !== 'loading') {
-          setStatus({ status: 'loading' });
-        }
-      },
-    });
+    if (isBundled(id)) {
+      setStatus({ status: 'loading' });
+      const res = await fetch(chrome.runtime.getURL(bundledModelPath(id)), { signal: ac.signal });
+      if (!res.ok) throw new Error(`bundled model missing (HTTP ${res.status})`);
+      await w.loadModel([await res.blob()], { n_ctx: N_CTX });
+    } else {
+      await download(w, id, ac.signal);
+    }
     if (wantedModel !== id) {
       await w.exit().catch(() => {});
       return;
@@ -183,6 +184,27 @@ async function switchTo(id: SlmModelId): Promise<void> {
   } finally {
     if (downloadAc === ac) downloadAc = null;
   }
+}
+
+/** Loads a non-bundled model from Hugging Face, through wllama's OPFS cache. */
+async function download(w: Wllama, id: SlmModelId, signal: AbortSignal): Promise<void> {
+  const url = modelUrl(id);
+  const cached = (await w.modelManager.getModels()).some((m) => m.url === url);
+  setStatus(cached ? { status: 'loading' } : { status: 'downloading', progress: 0 });
+  let lastPct = -1;
+  await w.loadModelFromUrl(url, {
+    n_ctx: N_CTX,
+    signal,
+    progressCallback: ({ loaded, total }) => {
+      if (wantedModel !== id) return;
+      if (total > 0 && loaded < total) {
+        const pct = Math.floor((loaded / total) * 100);
+        if (pct !== lastPct) setStatus({ status: 'downloading', progress: (lastPct = pct) });
+      } else if (status.status !== 'loading') {
+        setStatus({ status: 'loading' });
+      }
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
