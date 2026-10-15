@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "CYCU CAL Code Editor",
+  "version": "0.1.0",
+  "description": "Replaces the CYCU CAL editor with Monaco + clangd (WASM) language features and optional local completion.",
+  "minimum_chrome_version": "116",
+  "permissions": ["offscreen", "storage", "unlimitedStorage"],
+  "host_permissions": ["https://huggingface.co/*", "https://*.hf.co/*", "https://*.huggingface.co/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "options_page": "src/options/options.html",
+  "cross_origin_embedder_policy": { "value": "require-corp" },
+  "cross_origin_opener_policy": { "value": "same-origin" },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://cycu-cal.tw/cal/topic/*"],
+      "js": ["main-world.js"],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://cycu-cal.tw/cal/topic/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["editor.worker.js"], "matches": ["https://cycu-cal.tw/*"] }
+  ]
+}
