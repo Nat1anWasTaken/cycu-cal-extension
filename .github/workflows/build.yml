@@ -28,12 +28,22 @@ jobs:
       # clangd.wasm (~127 MB) is not committed; cache it by the pinned hashes in fetch-vendor.mjs.
       - uses: actions/cache@v4
         with:
-          path: vendor
+          path: vendor/clangd
           key: vendor-${{ hashFiles('scripts/fetch-vendor.mjs') }}
+
+      # Model weights for the offline build (~400 MB), pinned in src/shared/protocol.ts.
+      - uses: actions/cache@v4
+        with:
+          path: vendor/models
+          key: models-${{ hashFiles('src/shared/protocol.ts') }}
 
       - run: pnpm typecheck
 
       - run: pnpm package
+
+      - run: pnpm package:offline
+        env:
+          OUT_DIR: dist-offline
 
       - uses: actions/upload-artifact@v4
         with:
@@ -42,6 +52,14 @@ jobs:
           # that unpacks straight into a "Load unpacked"-ready folder.
           path: dist/
           if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cycu-cal-extension-offline
+          path: dist-offline/
+          if-no-files-found: error
+          # The weights are already compressed; skip re-compressing ~400 MB.
+          compression-level: 0
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/v')
