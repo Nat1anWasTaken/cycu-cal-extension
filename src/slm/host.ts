@@ -6,7 +6,7 @@
 // has enabled the feature) and cached in OPFS by wllama's CacheManager.
 
 import { LoggerWithoutDebug, Wllama, WllamaAbortError } from '@wllama/wllama';
-import { SLM_MODELS, type SlmModelId, type SlmPortIn, type SlmPortOut, type SlmStatus } from '../shared/protocol';
+import { modelUrl, SLM_MODELS, type SlmModelId, type SlmPortIn, type SlmPortOut, type SlmStatus } from '../shared/protocol';
 import { buildFimPrompt, cursorContext, postprocess, STOP_SEQUENCES, trimContext, DEFAULT_MAX_CONTEXT_TOKENS } from './fim';
 
 const WASM_PATH = 'wllama/wllama.wasm';
@@ -18,11 +18,6 @@ const IDLE_UNLOAD_MS = 10 * 60_000;
 /** Abort an in-progress download if no tab reconnects within this window (e.g. the feature was disabled). */
 const DOWNLOAD_ABANDON_MS = 20_000;
 const TAB_SIZE = 2;
-
-export function modelUrl(id: SlmModelId): string {
-  const m = SLM_MODELS[id];
-  return `https://huggingface.co/${m.repo}/resolve/main/${m.file}`;
-}
 
 interface StatusMsg {
   status: SlmStatus;

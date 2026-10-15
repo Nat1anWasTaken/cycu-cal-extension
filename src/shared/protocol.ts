@@ -124,17 +124,38 @@ export type SlmStatus = 'idle' | 'downloading' | 'loading' | 'ready' | 'error';
 
 export type SlmModelId = 'qwen2.5-coder-0.5b' | 'qwen2.5-coder-1.5b';
 
-export const SLM_MODELS: Record<SlmModelId, { label: string; repo: string; file: string; approxMB: number }> = {
+export interface SlmModel {
+  label: string;
+  repo: string;
+  /** Pinned commit of `repo`, so upstream edits can't swap the weights. */
+  revision: string;
+  file: string;
+  /** SHA-256 of `file` (Hugging Face's LFS etag). */
+  sha256: string;
+  approxMB: number;
+}
+
+export const SLM_MODELS: Record<SlmModelId, SlmModel> = {
   'qwen2.5-coder-0.5b': {
     label: 'Qwen2.5-Coder 0.5B (Q4_K_M)',
     repo: 'bartowski/Qwen2.5-Coder-0.5B-GGUF',
+    revision: '01c1b8072277dfbfd0d051ec95b7a43bb23d2f6a',
     file: 'Qwen2.5-Coder-0.5B-Q4_K_M.gguf',
+    sha256: 'fefe9d34df79d3ad3db33519d81112be76096626a5fdb87a98092035dc79ad68',
     approxMB: 400,
   },
   'qwen2.5-coder-1.5b': {
     label: 'Qwen2.5-Coder 1.5B (Q4_K_M)',
     repo: 'QuantFactory/Qwen2.5-Coder-1.5B-GGUF',
+    revision: '73c3c696087d8d57a3005e31f2afe78f43059739',
     file: 'Qwen2.5-Coder-1.5B.Q4_K_M.gguf',
+    sha256: 'a9ccb6be802412e61e1acbee6287a23b11e56e94718560f910075c64b6194910',
     approxMB: 990,
   },
 };
+
+export function modelUrl(id: SlmModelId): string {
+  const m = SLM_MODELS[id];
+  return `https://huggingface.co/${m.repo}/resolve/${m.revision}/${m.file}`;
+}
+
