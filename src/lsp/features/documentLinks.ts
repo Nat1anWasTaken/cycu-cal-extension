@@ -6,6 +6,7 @@
 import type * as Monaco from 'monaco-editor/editor/editor.api.js';
 import type * as P from 'vscode-languageserver-protocol';
 import type { FeatureContext } from '../monaco-bridge';
+import { t } from '../../shared/i18n';
 import { toMonacoRange } from './convert';
 
 export const PEEK_HEADER_COMMAND = 'cal.peekHeader';
@@ -33,7 +34,7 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
       range,
       url: l.target ? monaco.Uri.parse(linkCommandUri(l.target, range.startLineNumber, range.startColumn)) : undefined,
       tooltip:
-        l.tooltip ?? (l.target ? `查看 ${decodeURIComponent(l.target.replace(/^file:\/\//, ''))}（唯讀）` : undefined),
+        l.tooltip ?? (l.target ? t('link.peek', decodeURIComponent(l.target.replace(/^file:\/\//, ''))) : undefined),
     };
     origin.set(link, l);
     return link;

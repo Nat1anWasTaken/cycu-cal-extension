@@ -1,6 +1,7 @@
 // User settings, persisted in chrome.storage.sync and shared by the content script and options page.
 
 import { BUNDLED_MODELS } from './bundle';
+import { LOCALES, type LanguageSetting } from './i18n';
 import { SLM_CONTEXT_SIZES, type SlmContextTokens, type SlmModelId } from './protocol';
 
 export type FeatureId =
@@ -18,23 +19,9 @@ export type FeatureId =
   | 'documentLinks'
   | 'inlineCompletion';
 
-export const FEATURE_LABELS: Record<FeatureId, string> = {
-  diagnostics: '錯誤檢查與快速修正',
-  completion: '自動完成',
-  hover: '滑鼠停留說明',
-  signatureHelp: '函式參數提示',
-  formatting: '自動排版（clang-format）',
-  definition: '跳到定義／尋找使用處',
-  highlightRename: '標示與重新命名',
-  outline: '程式大綱',
-  folding: '收合程式區塊',
-  inlayHints: '行內提示',
-  semanticTokens: '進階語法上色',
-  documentLinks: '#include 連結',
-  inlineCompletion: '本機 AI 自動補全',
-};
-
 export interface Settings {
+  /** UI language; 'auto' follows the browser. Open pages pick up a change on reload. */
+  language: LanguageSetting;
   /** Show Monaco instead of the site's Ace editor. */
   useMonaco: boolean;
   features: Record<FeatureId, boolean>;
@@ -55,6 +42,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  language: 'auto',
   useMonaco: true,
   features: {
     diagnostics: true,
@@ -111,6 +99,7 @@ function mergeSettings(raw: Partial<Settings> | undefined): Settings {
     ...raw,
     features: { ...DEFAULT_SETTINGS.features, ...raw?.features },
   };
+  if (s.language !== 'auto' && !(s.language in LOCALES)) s.language = DEFAULT_SETTINGS.language;
   if (!SLM_CONTEXT_SIZES.includes(s.slmContextTokens)) s.slmContextTokens = DEFAULT_SETTINGS.slmContextTokens;
   return s;
 }

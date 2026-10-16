@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-Hant-TW">
+<html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CYCU CAL 程式碼編輯器 – 設定</title>
+    <title data-i18n="options.title"></title>
     <link rel="stylesheet" href="./options.css" />
   </head>
   <body>
@@ -11,106 +11,126 @@
       <header class="masthead">
         <div class="logo" aria-hidden="true">{ }</div>
         <div>
-          <h1>CYCU CAL 程式碼編輯器</h1>
-          <p class="tagline">
-            讓 CAL 寫程式更輕鬆：更好用的編輯器、即時錯誤提示，還有本機 AI 自動補全。 <span id="version"></span>
-          </p>
+          <h1 data-i18n="extName"></h1>
+          <p class="tagline"><span data-i18n="options.tagline"></span> <span id="version"></span></p>
         </div>
       </header>
 
       <form id="form" autocomplete="off">
-        <h2>編輯器</h2>
+        <h2 data-i18n="options.editor"></h2>
         <section class="card">
+          <div class="row">
+            <span class="text">
+              <span class="title" data-i18n="options.language"></span>
+              <span class="desc" data-i18n="options.languageDesc"></span>
+            </span>
+            <span class="segmented" role="radiogroup" data-i18n-aria-label="options.language">
+              <input type="radio" name="language" id="language-auto" value="auto" /><label
+                for="language-auto"
+                data-i18n="options.languageAuto"
+              ></label>
+              <input type="radio" name="language" id="language-en" value="en" /><label for="language-en" lang="en"
+                >English</label
+              >
+              <input type="radio" name="language" id="language-zh-TW" value="zh-TW" /><label
+                for="language-zh-TW"
+                lang="zh-TW"
+                >繁體中文</label
+              >
+            </span>
+          </div>
           <label class="row">
             <span class="text">
-              <span class="title">使用新版編輯器（Monaco）</span>
-              <span class="desc"
-                >用和 VS Code 相同的編輯器取代網站原本的編輯器。也可以在題目頁面的工具列上隨時切換。</span
-              >
+              <span class="title" data-i18n="options.useMonaco"></span>
+              <span class="desc" data-i18n="options.useMonacoDesc"></span>
             </span>
             <input type="checkbox" class="switch" id="useMonaco" />
           </label>
           <div class="row">
             <span class="text">
-              <span class="title">外觀主題</span>
-              <span class="desc">編輯器的配色。</span>
+              <span class="title" data-i18n="options.theme"></span>
+              <span class="desc" data-i18n="options.themeDesc"></span>
             </span>
-            <span class="segmented" role="radiogroup" aria-label="外觀主題">
-              <input type="radio" name="theme" id="theme-light" value="light" /><label for="theme-light">淺色</label>
-              <input type="radio" name="theme" id="theme-dark" value="dark" /><label for="theme-dark">深色</label>
+            <span class="segmented" role="radiogroup" data-i18n-aria-label="options.theme">
+              <input type="radio" name="theme" id="theme-light" value="light" /><label
+                for="theme-light"
+                data-i18n="options.themeLight"
+              ></label>
+              <input type="radio" name="theme" id="theme-dark" value="dark" /><label
+                for="theme-dark"
+                data-i18n="options.themeDark"
+              ></label>
             </span>
           </div>
           <label class="row">
             <span class="text">
-              <span class="title">程式碼縮圖</span>
-              <span class="desc">在編輯器右側顯示整份程式碼的縮小預覽，方便快速捲動。</span>
+              <span class="title" data-i18n="options.minimap"></span>
+              <span class="desc" data-i18n="options.minimapDesc"></span>
             </span>
             <input type="checkbox" class="switch" id="minimap" />
           </label>
           <div class="row stacked">
             <span class="text">
-              <span class="title">字型</span>
-              <span class="desc"
-                >想使用的字型名稱，可用逗號分隔多個，例如
-                <code>"JetBrains Mono", Consolas</code>。留空則使用網站預設字型。</span
+              <span class="title" data-i18n="options.fontFamily"></span>
+              <span class="desc" data-i18n="options.fontFamilyDesc"
+                ><code data-i18n-slot="example">"JetBrains Mono", Consolas</code></span
               >
             </span>
-            <input type="text" id="fontFamily" spellcheck="false" placeholder="網站預設字型" aria-label="字型" />
+            <input
+              type="text"
+              id="fontFamily"
+              spellcheck="false"
+              data-i18n-placeholder="options.fontFamilyPlaceholder"
+              data-i18n-aria-label="options.fontFamily"
+            />
           </div>
         </section>
 
-        <h2>工具列</h2>
+        <h2 data-i18n="options.toolbar"></h2>
         <section class="card">
           <label class="row">
             <span class="text">
-              <span class="title">程式分析狀態</span>
-              <span class="desc">顯示負責檢查程式碼的工具（clangd）目前是啟動中、已就緒，還是發生錯誤。</span>
+              <span class="title" data-i18n="options.clangdBadge"></span>
+              <span class="desc" data-i18n="options.clangdBadgeDesc"></span>
             </span>
             <input type="checkbox" class="switch" id="showClangdBadge" />
           </label>
           <label class="row">
             <span class="text">
-              <span class="title">AI 狀態</span>
-              <span class="desc">開啟 AI 自動補全時，顯示 AI 模型目前的狀態（下載中、載入中、已就緒）。</span>
+              <span class="title" data-i18n="options.slmBadge"></span>
+              <span class="desc" data-i18n="options.slmBadgeDesc"></span>
             </span>
             <input type="checkbox" class="switch" id="showSlmBadge" />
           </label>
           <label class="row">
             <span class="text">
-              <span class="title">「排版」按鈕</span>
-              <span class="desc"
-                >一鍵把程式碼的縮排和空白整理整齊（也可以按 Shift+Alt+F）。需要開啟下方的「自動排版」功能。</span
-              >
+              <span class="title" data-i18n="options.formatButton"></span>
+              <span class="desc" data-i18n="options.formatButtonDesc"></span>
             </span>
             <input type="checkbox" class="switch" id="showFormatButton" />
           </label>
         </section>
 
-        <h2>寫程式輔助功能</h2>
-        <p class="section-hint">
-          這些功能由 clangd 提供，它是一個 C 語言分析工具，完全在你的瀏覽器裡執行。修改後會立即套用到已開啟的編輯器。
-        </p>
+        <h2 data-i18n="options.features"></h2>
+        <p class="section-hint" data-i18n="options.featuresHint"></p>
         <section class="card features" id="features"></section>
 
-        <h2>本機 AI 自動補全</h2>
+        <h2 data-i18n="options.slm"></h2>
         <section class="card">
           <div id="slmToggle"></div>
           <div class="row">
             <span class="text">
-              <span class="title">參考範圍</span>
-              <span class="desc"
-                >AI 一次能讀取多少程式碼（單位是 token，大約是一小段文字）。數字越大，AI
-                能看到越多程式碼，但會用掉更多記憶體、回應也比較慢。</span
-              >
+              <span class="title" data-i18n="options.slmContext"></span>
+              <span class="desc" data-i18n="options.slmContextDesc"></span>
             </span>
-            <span id="slmContext" class="segmented" role="radiogroup" aria-label="參考範圍"></span>
+            <span id="slmContext" class="segmented" role="radiogroup" data-i18n-aria-label="options.slmContext"></span>
           </div>
           <div class="row stacked">
             <span class="text">
-              <span class="title">AI 模型</span>
-              <span class="desc">模型越大，建議的程式碼越準確，但載入和回應都會比較慢。</span>
+              <span class="title" data-i18n="options.slmModel"></span>
+              <span class="desc" data-i18n="options.slmModelDesc"></span>
             </span>
-            <div id="slmModel" class="models" role="radiogroup" aria-label="AI 模型"></div>
+            <div id="slmModel" class="models" role="radiogroup" data-i18n-aria-label="options.slmModel"></div>
           </div>
           <p class="note">
             <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -118,22 +138,24 @@
                 d="M4 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 14 8.5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5v-5A1.5 1.5 0 0 1 3.5 7H4Zm1.5 0h5V5a2.5 2.5 0 0 0-5 0v2Z"
               />
             </svg>
-            <span
-              >AI 在你自己的電腦上執行，只會讀取編輯器裡的程式碼，不會傳送任何資料到伺服器。
-              若模型沒有包含在擴充功能中，第一次使用時會從 Hugging Face 下載一次，之後就存在這個瀏覽器裡。</span
-            >
+            <span data-i18n="options.slmNote"></span>
           </p>
         </section>
 
-        <h2>編譯選項（進階）</h2>
+        <h2 data-i18n="options.compileFlags"></h2>
         <section class="card">
           <div class="row stacked">
             <span class="text">
-              <span class="title">clangd 編譯參數</span>
-              <span class="desc">檢查程式碼時使用的編譯參數，每行一個。不確定的話保留預設值即可。</span>
+              <span class="title" data-i18n="options.clangdFlags"></span>
+              <span class="desc" data-i18n="options.clangdFlagsDesc"></span>
             </span>
-            <textarea id="compileFlags" rows="5" spellcheck="false" aria-label="編譯參數"></textarea>
-            <button type="button" id="resetFlags" class="ghost">恢復預設值</button>
+            <textarea
+              id="compileFlags"
+              rows="5"
+              spellcheck="false"
+              data-i18n-aria-label="options.clangdFlags"
+            ></textarea>
+            <button type="button" id="resetFlags" class="ghost" data-i18n="options.resetFlags"></button>
           </div>
         </section>
       </form>

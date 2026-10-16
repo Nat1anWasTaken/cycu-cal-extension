@@ -7,8 +7,8 @@
 // entry, which would pull in every language.
 
 import './dom-shims';
-// Traditional Chinese UI strings; sets the global message table Monaco's nls.js reads, so it must load first.
-import 'monaco-editor/nls/lang/zh-tw.js';
+// Localized UI strings; sets the global message table Monaco's nls.js reads, so it must load first.
+import './nls';
 import * as monaco from 'monaco-editor/editor/editor.api.js';
 
 // Core

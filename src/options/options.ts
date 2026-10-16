@@ -2,15 +2,9 @@
 // Every change is saved immediately; the toast in #status confirms it.
 
 import { isBundled } from '../shared/bundle';
+import { getLocale, localeFor, setLocale, t, type LanguageSetting, type MessageKey } from '../shared/i18n';
 import { SLM_CONTEXT_SIZES, SLM_MODELS, type SlmContextTokens, type SlmModelId } from '../shared/protocol';
-import {
-  DEFAULT_SETTINGS,
-  FEATURE_LABELS,
-  loadSettings,
-  saveSettings,
-  type FeatureId,
-  type Settings,
-} from '../shared/settings';
+import { DEFAULT_SETTINGS, loadSettings, saveSettings, type FeatureId, type Settings } from '../shared/settings';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -27,23 +21,7 @@ const slmContext = $<HTMLSpanElement>('slmContext');
 const compileFlags = $<HTMLTextAreaElement>('compileFlags');
 const statusEl = $<HTMLDivElement>('status');
 
-const FEATURE_HINTS: Record<FeatureId, string> = {
-  diagnostics: '邊打字邊標出錯誤和警告，並提供一鍵修正',
-  completion: '打字時跳出變數、函式名稱等建議',
-  hover: '滑鼠移到程式碼上，顯示它的型別和說明',
-  signatureHelp: '呼叫函式時，提示該填哪些參數',
-  formatting: '自動整理整份或選取部分程式碼的縮排與空白',
-  definition: '跳到變數或函式定義的位置，或找出所有用到它的地方',
-  highlightRename: '標示同一個名稱出現的所有位置，並可一次全部改名',
-  outline: '快速列出所有函式和變數（Ctrl/Cmd+Shift+O）',
-  folding: '把程式區塊或註解收合起來，讓畫面更清爽',
-  inlayHints: '在程式碼中直接顯示參數名稱和型別',
-  semanticTokens: '依照用途（變數、函式、型別等）為程式碼上色',
-  documentLinks: '按住 Ctrl/Cmd 點擊 #include，查看標頭檔內容',
-  inlineCompletion: '以灰色文字預先顯示 AI 建議的程式碼，按 Tab 接受',
-};
-
-const featureIds = Object.keys(FEATURE_LABELS) as FeatureId[];
+const featureIds = Object.keys(DEFAULT_SETTINGS.features) as FeatureId[];
 const boxes = new Map<FeatureId, HTMLInputElement>();
 const modelIds = Object.keys(SLM_MODELS) as SlmModelId[];
 const radios = new Map<SlmModelId, HTMLInputElement>();
@@ -56,10 +34,7 @@ function sizeText(id: SlmModelId): string {
 function confirmDownload(id: SlmModelId): boolean {
   if (isBundled(id)) return true;
   const m = SLM_MODELS[id];
-  return confirm(
-    `本機 AI 自動補全需要從 Hugging Face（${m.repo}）下載 ${m.label}，大小約 ${sizeText(id)}。\n\n` +
-      '下載後會存在這個瀏覽器中，並在你的電腦上執行。要繼續嗎？',
-  );
+  return confirm(t('options.slmConfirm', m.label, sizeText(id), m.repo));
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -78,6 +53,7 @@ function syncModelState(): void {
 }
 
 function render(s: Settings): void {
+  $<HTMLInputElement>(`language-${s.language}`).checked = true;
   useMonaco.checked = s.useMonaco;
   $<HTMLInputElement>(`theme-${s.theme}`).checked = true;
   minimap.checked = s.minimap;
@@ -96,6 +72,8 @@ function read(): Partial<Settings> {
   const features = {} as Record<FeatureId, boolean>;
   for (const id of featureIds) features[id] = boxes.get(id)!.checked;
   return {
+    language: (form.querySelector<HTMLInputElement>('input[name=language]:checked')?.value ??
+      DEFAULT_SETTINGS.language) as LanguageSetting,
     useMonaco: useMonaco.checked,
     theme: $<HTMLInputElement>('theme-dark').checked ? 'dark' : 'light',
     minimap: minimap.checked,
@@ -118,9 +96,9 @@ function read(): Partial<Settings> {
 async function save(): Promise<void> {
   try {
     render(await saveSettings(read()));
-    setStatus('已儲存');
+    setStatus(t('options.saved'));
   } catch (err) {
-    setStatus(`儲存失敗：${err instanceof Error ? err.message : String(err)}`, true);
+    setStatus(t('options.saveFailed', err instanceof Error ? err.message : String(err)), true);
   }
 }
 
@@ -131,11 +109,39 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text?: s
   return e;
 }
 
+// Settings pick the UI language, so load them before rendering any text.
+let initial = DEFAULT_SETTINGS;
+let loadError: unknown;
+try {
+  initial = await loadSettings();
+} catch (err) {
+  loadError = err;
+}
+setLocale(localeFor(initial.language));
+
+// Static text: data-i18n sets an element's text, data-i18n-<attr> one of its attributes. A {name} in the message is
+// replaced with the element's [data-i18n-slot=name] child, which keeps its markup.
+document.documentElement.lang = getLocale();
+for (const e of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
+  const slots = new Map([...e.querySelectorAll<HTMLElement>('[data-i18n-slot]')].map((c) => [c.dataset.i18nSlot, c]));
+  e.replaceChildren(
+    ...t(e.dataset.i18n as MessageKey)
+      .split(/(\{\w+\})/)
+      .map((part) => slots.get(part.slice(1, -1)) ?? part),
+  );
+}
+for (const e of document.querySelectorAll<HTMLElement>('[data-i18n-aria-label], [data-i18n-placeholder]')) {
+  for (const attr of ['aria-label', 'placeholder']) {
+    const key = e.getAttribute(`data-i18n-${attr}`);
+    if (key) e.setAttribute(attr, t(key as MessageKey));
+  }
+}
+
 // Build controls. Inline completion lives in the AI section, next to its model picker.
 for (const id of featureIds) {
   const row = el('label', 'row');
   const text = el('span', 'text');
-  text.append(el('span', 'title', FEATURE_LABELS[id]), el('span', 'desc', FEATURE_HINTS[id]));
+  text.append(el('span', 'title', t(`feature.${id}`)), el('span', 'desc', t(`featureHint.${id}`)));
   const box = el('input', 'switch');
   box.type = 'checkbox';
   box.id = `feature-${id}`;
@@ -155,8 +161,8 @@ for (const id of modelIds) {
   const title = el('span', 'name', name);
   if (quant) title.append(el('span', 'quant', quant));
   const badge = isBundled(id)
-    ? el('span', 'badge included', `已內建 · ${sizeText(id)}`)
-    : el('span', 'badge', `需下載 ${sizeText(id)}`);
+    ? el('span', 'badge included', t('options.slmIncluded', sizeText(id)))
+    : el('span', 'badge', t('options.slmDownload', sizeText(id)));
   row.append(radio, title, badge);
   slmModel.append(row);
   radios.set(id, radio);
@@ -179,17 +185,19 @@ try {
 
 // Enabling inline completion (or switching to another model while enabled) downloads weights: ask first.
 const slmBox = boxes.get('inlineCompletion')!;
-let lastModel = DEFAULT_SETTINGS.slmModel;
+let lastModel = initial.slmModel;
 form.addEventListener('change', (e) => {
-  const t = e.target;
-  if (t === compileFlags || t === fontFamily) return; // saved while typing
-  if (t === slmBox && slmBox.checked && !confirmDownload(selectedModel())) slmBox.checked = false;
-  if (t instanceof HTMLInputElement && t.name === 'slmModel') {
+  const target = e.target;
+  if (target === compileFlags || target === fontFamily) return; // saved while typing
+  if (target === slmBox && slmBox.checked && !confirmDownload(selectedModel())) slmBox.checked = false;
+  if (target instanceof HTMLInputElement && target.name === 'slmModel') {
     if (slmBox.checked && !confirmDownload(selectedModel())) radios.get(lastModel)!.checked = true;
     lastModel = selectedModel();
   }
   syncModelState();
-  void save();
+  // A new language re-renders the page in it.
+  if (target instanceof HTMLInputElement && target.name === 'language') void save().then(() => location.reload());
+  else void save();
 });
 
 let typingTimer: ReturnType<typeof setTimeout> | undefined;
@@ -205,9 +213,5 @@ $<HTMLButtonElement>('resetFlags').addEventListener('click', () => {
   void save();
 });
 
-loadSettings()
-  .then((s) => {
-    render(s);
-    lastModel = s.slmModel;
-  })
-  .catch((err) => setStatus(`無法載入設定：${err}`, true));
+render(initial);
+if (loadError) setStatus(t('options.loadFailed', String(loadError)), true);

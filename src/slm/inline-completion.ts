@@ -5,6 +5,7 @@
 // ever sent: never the problem statement or other page content.
 
 import type * as Monaco from 'monaco-editor/editor/editor.api.js';
+import { getLocale, t } from '../shared/i18n';
 import {
   SLM_PORT,
   type EnsureOffscreenResponse,
@@ -88,7 +89,7 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
     if (
       port &&
       sentLoad !== key &&
-      send({ type: 'load', modelId: settings.slmModel, contextTokens: settings.slmContextTokens })
+      send({ type: 'load', modelId: settings.slmModel, contextTokens: settings.slmContextTokens, locale: getLocale() })
     ) {
       sentLoad = key;
     }
@@ -184,7 +185,7 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
 
   function registerProvider(): Monaco.IDisposable {
     return monaco.languages.registerInlineCompletionsProvider('c', {
-      displayName: '本機 AI',
+      displayName: t('slm.displayName'),
       debounceDelayMs: DEBOUNCE_MS,
       async provideInlineCompletions(m, position, _context, token) {
         if (m !== model || !enabled() || status !== 'ready' || !port) return undefined;

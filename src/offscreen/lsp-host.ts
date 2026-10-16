@@ -8,6 +8,7 @@
 //  - cal/readFile is served from the worker's Emscripten FS;
 //  - a disconnecting port gets didClose for its documents; idle shutdown after IDLE_MS.
 
+import { getLocale, setLocale, t } from '../shared/i18n';
 import {
   READ_FILE_METHOD,
   type LspPortIn,
@@ -83,8 +84,10 @@ export class LspHost {
     this.clients.add(client);
     clearTimeout(this.idleTimer);
     port.onMessage.addListener((m: LspPortIn) => {
-      if (m?.type === 'hello') this.onHello(client, m.compileFlags);
-      else if (m?.type === 'rpc') this.fromClient(client, m.message as RpcMessage);
+      if (m?.type === 'hello') {
+        setLocale(m.locale);
+        this.onHello(client, m.compileFlags);
+      } else if (m?.type === 'rpc') this.fromClient(client, m.message as RpcMessage);
     });
     port.onDisconnect.addListener(() => this.onDisconnect(client));
   }
@@ -111,16 +114,17 @@ export class LspHost {
       if (this.worker === w) this.fromWorker(e.data);
     };
     w.onerror = (e) => {
-      if (this.worker === w) this.stopWorker('error', `程式分析工具發生錯誤：${e.message || '載入失敗'}`);
+      if (this.worker === w)
+        this.stopWorker('error', t('clangd.detail.workerError', e.message || t('clangd.detail.failedToLoad')));
     };
-    this.toWorker({ type: 'start', compileFlags: flags });
-    this.setStatus('loading', '正在載入 clangd');
+    this.toWorker({ type: 'start', compileFlags: flags, locale: getLocale() });
+    this.setStatus('loading', t('clangd.detail.loading'));
   }
 
   private stopWorker(status: ServerStatus, detail?: string) {
     this.worker?.terminate();
     this.worker = null;
-    const err = { code: -32099, message: detail ?? 'clangd 已停止' };
+    const err = { code: -32099, message: detail ?? t('clangd.detail.stopped') };
     for (const p of this.pending.values()) if (p.kind === 'client') this.reply(p.client, p.id, undefined, err);
     if (this.init.state === 'pending') for (const w of this.init.waiters) this.reply(w.client, w.id, undefined, err);
     for (const r of this.readFiles.values()) this.reply(r.client, r.id, { text: null } satisfies ReadFileResult);
@@ -161,7 +165,7 @@ export class LspHost {
     if (this.clients.size === 0 && this.worker) {
       clearTimeout(this.idleTimer);
       this.idleTimer = setTimeout(() => {
-        if (this.clients.size === 0) this.stopWorker('stopped', '閒置中，已暫停');
+        if (this.clients.size === 0) this.stopWorker('stopped', t('clangd.detail.idle'));
       }, IDLE_MS);
     }
   }
@@ -260,7 +264,7 @@ export class LspHost {
         break;
       case 'started':
         console.info(`[cal] clangd ready in ${Math.round(performance.now() - this.startedAt)} ms`);
-        this.setStatus('ready', `已在 ${(m.ms / 1000).toFixed(1)} 秒內啟動`);
+        this.setStatus('ready', t('clangd.detail.started', (m.ms / 1000).toFixed(1)));
         break;
       case 'lsp':
         this.fromServer(m.message as RpcMessage);
@@ -273,7 +277,7 @@ export class LspHost {
         break;
       }
       case 'exit':
-        this.stopWorker(m.code === 0 ? 'stopped' : 'error', `clangd 已結束（代碼 ${m.code}）`);
+        this.stopWorker(m.code === 0 ? 'stopped' : 'error', t('clangd.detail.exited', m.code));
         break;
       case 'error':
         console.error('[cal]', m.error);

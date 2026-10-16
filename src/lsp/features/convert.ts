@@ -11,6 +11,7 @@
 
 import type * as Monaco from 'monaco-editor/editor/editor.api.js';
 import type * as P from 'vscode-languageserver-protocol';
+import { t } from '../../shared/i18n.ts';
 import type { LockRange } from '../../shared/protocol';
 
 export type MonacoNS = typeof Monaco;
@@ -339,14 +340,12 @@ export function workspaceEditRejection(
   locks: readonly LockRange[],
 ): string | undefined {
   const { edits, fileOps } = flattenWorkspaceEdit(we);
-  if (fileOps) return '這項修改會新增、重新命名或刪除檔案，因此無法套用。';
+  if (fileOps) return t('edit.fileOps');
   for (const { uri, edit } of edits) {
-    if (uri !== docUri) return `這項修改會改動其他檔案（${uri.replace(/^file:\/\//, '')}），因此無法套用。`;
+    if (uri !== docUri) return t('edit.otherFile', uri.replace(/^file:\/\//, ''));
     const lock = rangeTouchesLocks(edit.range, locks);
     if (lock) {
-      const a = lock.start.row + 1;
-      const b = lock.end.row + 1;
-      return `這項修改會改動不可編輯的第 ${a === b ? a : `${a}-${b}`} 行，因此無法套用。`;
+      return t('edit.locked', lock.start.row + 1, lock.end.row + 1);
     }
   }
   return undefined;

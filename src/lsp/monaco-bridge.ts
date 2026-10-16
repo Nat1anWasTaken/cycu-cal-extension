@@ -20,6 +20,7 @@ import {
   type ServerStatus,
   type ToBackground,
 } from '../shared/protocol';
+import { getLocale, t } from '../shared/i18n';
 import { JsonRpcClient, type CancellationTokenLike, type Disposable } from './client';
 
 export interface PortLike {
@@ -368,7 +369,7 @@ export class LspBridge {
       port = await (this.opts.connect ?? chromeConnect)();
     } catch (e) {
       if (gen !== this.generation || this.disposed) return;
-      if (!extensionAlive()) return this.stop('extension was reloaded; refresh the page');
+      if (!extensionAlive()) return this.stop(t('clangd.detail.extensionReloaded'));
       this.opts.onStatus('error', e instanceof Error ? e.message : String(e));
       return this.scheduleReconnect();
     }
@@ -386,12 +387,12 @@ export class LspBridge {
       void chrome.runtime?.lastError; // silence "Unchecked runtime.lastError"
       if (gen !== this.generation || this.disposed) return;
       this.drop();
-      if (!extensionAlive()) return this.stop('extension was reloaded; refresh the page');
-      this.opts.onStatus('loading', 'reconnecting…');
+      if (!extensionAlive()) return this.stop(t('clangd.detail.extensionReloaded'));
+      this.opts.onStatus('loading', t('clangd.detail.reconnecting'));
       this.scheduleReconnect();
     });
     this.client.setSender((message) => port.postMessage({ type: 'rpc', message } satisfies LspPortIn));
-    port.postMessage({ type: 'hello', compileFlags: this.opts.compileFlags } satisfies LspHello);
+    port.postMessage({ type: 'hello', compileFlags: this.opts.compileFlags, locale: getLocale() } satisfies LspHello);
 
     try {
       const params: P.InitializeParams = {
@@ -422,7 +423,7 @@ export class LspBridge {
       }
     } catch (e) {
       if (gen !== this.generation || this.disposed) return;
-      this.opts.onStatus('error', `initialize failed: ${e instanceof Error ? e.message : String(e)}`);
+      this.opts.onStatus('error', t('clangd.detail.initFailed', e instanceof Error ? e.message : String(e)));
       this.drop();
       this.scheduleReconnect();
     }

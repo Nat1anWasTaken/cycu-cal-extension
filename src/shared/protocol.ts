@@ -4,6 +4,8 @@
 //   content script     ⇄ chrome.runtime Port ⇄ offscreen document (clangd / SLM workers)
 //   content script     → chrome.runtime.sendMessage → background service worker
 
+import type { Locale } from './i18n';
+
 // ---------------------------------------------------------------------------
 // MAIN world ⇄ ISOLATED world bridge (window.postMessage)
 // ---------------------------------------------------------------------------
@@ -81,6 +83,8 @@ export interface LspHello {
   type: 'hello';
   /** compile_flags.txt content, one flag per line. */
   compileFlags: string[];
+  /** UI locale for status details. */
+  locale: Locale;
 }
 
 /** Port messages content → offscreen on LSP_PORT. */
@@ -105,7 +109,7 @@ export interface ReadFileResult {
 
 /** Port messages content → offscreen on SLM_PORT. */
 export type SlmPortIn =
-  | { type: 'load'; modelId: SlmModelId; contextTokens: SlmContextTokens }
+  | { type: 'load'; modelId: SlmModelId; contextTokens: SlmContextTokens; locale: Locale }
   | { type: 'complete'; id: number; prefix: string; suffix: string; maxTokens: number }
   | { type: 'cancel'; id: number };
 

@@ -2,6 +2,7 @@
 // hides that container on passed topics). Uses the site's Bootstrap + FontAwesome 6 classes; the
 // few extension-specific styles live in src/content/content.css.
 
+import { t } from '../shared/i18n';
 import type { ServerStatus, SlmStatus, ToBackground } from '../shared/protocol';
 
 export interface Toolbar {
@@ -39,24 +40,10 @@ function icon(cls: string): HTMLElement {
   return el('i', cls, { 'aria-hidden': 'true' });
 }
 
-const CLANGD_LABEL: Record<ServerStatus | 'starting', string> = {
-  starting: '程式分析：啟動中…',
-  loading: '程式分析：載入中…',
-  ready: '程式分析：就緒',
-  error: '程式分析：發生錯誤',
-  stopped: '程式分析：已停止',
-};
-
-const SLM_LABEL: Record<SlmStatus, string> = {
-  idle: 'AI：待命',
-  downloading: 'AI：下載中',
-  loading: 'AI：載入中…',
-  ready: 'AI：就緒',
-  error: 'AI：發生錯誤',
-};
+const CLANGD_STATUSES: readonly (ServerStatus | 'starting')[] = ['starting', 'loading', 'ready', 'error', 'stopped'];
 
 export function createToolbar(opts: ToolbarOptions): Toolbar {
-  const root = el('div', 'cal-ext-toolbar', { role: 'group', 'aria-label': 'CYCU CAL 擴充功能' });
+  const root = el('div', 'cal-ext-toolbar', { role: 'group', 'aria-label': t('toolbar.label') });
 
   const toggle = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn cal-ext-toggle', { type: 'button' });
   const toggleIcon = icon('fa-solid fa-code');
@@ -70,8 +57,8 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
 
   const gear = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn', {
     type: 'button',
-    title: '擴充功能設定',
-    'aria-label': '擴充功能設定',
+    title: t('toolbar.settings'),
+    'aria-label': t('toolbar.settings'),
   });
   gear.append(icon('fa-solid fa-gear'));
   gear.addEventListener('click', (e) => {
@@ -84,11 +71,11 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
 
   const format = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn', {
     type: 'button',
-    title: '自動整理程式碼的縮排與空白（Shift+Alt+F）',
+    title: t('toolbar.formatTitle'),
   });
   format.append(
     icon('fa-solid fa-wand-magic-sparkles'),
-    Object.assign(el('span', 'cal-ext-btn-text'), { textContent: '排版' }),
+    Object.assign(el('span', 'cal-ext-btn-text'), { textContent: t('toolbar.format') }),
   );
   format.addEventListener('click', (e) => {
     e.preventDefault();
@@ -115,16 +102,14 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
   const api: Toolbar = {
     setMode(m) {
       useMonaco = m;
-      toggleText.textContent = m ? '新版編輯器' : '原版編輯器';
-      toggle.title = m
-        ? '目前使用新版編輯器（Monaco）— 點擊切換回網站原本的編輯器（Ace）'
-        : '目前使用網站原本的編輯器（Ace）— 點擊切換到新版編輯器（Monaco）';
+      toggleText.textContent = t(m ? 'toolbar.monaco' : 'toolbar.ace');
+      toggle.title = t(m ? 'toolbar.monacoTitle' : 'toolbar.aceTitle');
       toggle.setAttribute('aria-pressed', String(m));
       syncVisible();
     },
     setClangd(status, detail) {
       clangd.dataset.state = status;
-      clangd.textContent = CLANGD_LABEL[status] ?? `程式分析：${status}`;
+      clangd.textContent = CLANGD_STATUSES.includes(status) ? t(`clangd.${status}`) : t('clangd.other', status);
       clangd.title = detail ?? '';
     },
     setSlm(status, progress, detail) {
@@ -134,7 +119,7 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
         status === 'downloading' && typeof progress === 'number'
           ? ` ${Math.round(progress <= 1 ? progress * 100 : progress)}%`
           : '';
-      slm.textContent = SLM_LABEL[status] + pct;
+      slm.textContent = t(`slm.${status}`) + pct;
       slm.title = detail ?? '';
     },
     setVisible(show) {

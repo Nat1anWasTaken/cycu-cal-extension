@@ -1,0 +1,142 @@
+// Traditional Chinese (Taiwan) UI strings.
+// Keep this file free of runtime imports: scripts/build.mjs loads it directly to write _locales/.
+
+import type { Messages } from './en.ts';
+
+export const zhTW: Messages = {
+  // Manifest (written to _locales/zh_TW/messages.json)
+  extName: 'CYCU CAL 程式碼編輯器',
+  extDescription:
+    '把 CYCU CAL 的程式碼編輯器換成更好用的版本：即時錯誤提示、自動完成、自動排版，以及可選的本機 AI 自動補全。',
+
+  // Page toolbar
+  'toolbar.label': 'CYCU CAL 擴充功能',
+  'toolbar.settings': '擴充功能設定',
+  'toolbar.format': '排版',
+  'toolbar.formatTitle': '自動整理程式碼的縮排與空白（Shift+Alt+F）',
+  'toolbar.monaco': '新版編輯器',
+  'toolbar.ace': '原版編輯器',
+  'toolbar.monacoTitle': '目前使用新版編輯器（Monaco）— 點擊切換回網站原本的編輯器（Ace）',
+  'toolbar.aceTitle': '目前使用網站原本的編輯器（Ace）— 點擊切換到新版編輯器（Monaco）',
+  'clangd.starting': '程式分析：啟動中…',
+  'clangd.loading': '程式分析：載入中…',
+  'clangd.ready': '程式分析：就緒',
+  'clangd.error': '程式分析：發生錯誤',
+  'clangd.stopped': '程式分析：已停止',
+  'clangd.other': (status) => `程式分析：${status}`,
+  'slm.idle': 'AI：待命',
+  'slm.downloading': 'AI：下載中',
+  'slm.loading': 'AI：載入中…',
+  'slm.ready': 'AI：就緒',
+  'slm.error': 'AI：發生錯誤',
+
+  // clangd status details (offscreen document and worker)
+  'clangd.detail.loadingPct': (pct) => `正在載入 clangd ${pct}%`,
+  'clangd.detail.loadingMB': (mb) => `正在載入 clangd ${mb} MB`,
+  'clangd.detail.compiling': '正在準備 clangd',
+  'clangd.detail.loading': '正在載入 clangd',
+  'clangd.detail.starting': '正在啟動 clangd',
+  'clangd.detail.started': (seconds) => `已在 ${seconds} 秒內啟動`,
+  'clangd.detail.workerError': (message) => `程式分析工具發生錯誤：${message}`,
+  'clangd.detail.failedToLoad': '載入失敗',
+  'clangd.detail.stopped': 'clangd 已停止',
+  'clangd.detail.idle': '閒置中，已暫停',
+  'clangd.detail.reconnecting': '正在重新連線…',
+  'clangd.detail.extensionReloaded': '擴充功能已重新載入，請重新整理頁面',
+  'clangd.detail.initFailed': (error) => `初始化失敗：${error}`,
+  'clangd.detail.exited': (code) => `clangd 已結束（代碼 ${code}）`,
+
+  // Local AI completion
+  'slm.displayName': '本機 AI',
+  'slm.detail.unknownModel': (id) => `未知的模型：${id}`,
+  'slm.detail.bundledMissing': (status) => `找不到內建的模型檔案（HTTP ${status}）`,
+  'slm.detail.ready': (label, threads) => `${label}，使用 ${threads} 個執行緒`,
+
+  // Rename, workspace edits and links
+  'edit.fileOps': '這項修改會新增、重新命名或刪除檔案，因此無法套用。',
+  'edit.otherFile': (path) => `這項修改會改動其他檔案（${path}），因此無法套用。`,
+  'edit.locked': (from, to) => `這項修改會改動不可編輯的第 ${from === to ? from : `${from}-${to}`} 行，因此無法套用。`,
+  'rename.unavailable': '這個名稱無法重新命名。',
+  'rename.locked': '這個名稱位於不可編輯的行，無法重新命名。',
+  'rename.failed': '重新命名失敗。',
+  'rename.rejected': (reason) => `無法重新命名：${reason}`,
+  'link.peek': (path) => `查看 ${path}（唯讀）`,
+
+  // Feature names (options page)
+  'feature.diagnostics': '錯誤檢查與快速修正',
+  'feature.completion': '自動完成',
+  'feature.hover': '滑鼠停留說明',
+  'feature.signatureHelp': '函式參數提示',
+  'feature.formatting': '自動排版（clang-format）',
+  'feature.definition': '跳到定義／尋找使用處',
+  'feature.highlightRename': '標示與重新命名',
+  'feature.outline': '程式大綱',
+  'feature.folding': '收合程式區塊',
+  'feature.inlayHints': '行內提示',
+  'feature.semanticTokens': '進階語法上色',
+  'feature.documentLinks': '#include 連結',
+  'feature.inlineCompletion': '本機 AI 自動補全',
+  'featureHint.diagnostics': '邊打字邊標出錯誤和警告，並提供一鍵修正',
+  'featureHint.completion': '打字時跳出變數、函式名稱等建議',
+  'featureHint.hover': '滑鼠移到程式碼上，顯示它的型別和說明',
+  'featureHint.signatureHelp': '呼叫函式時，提示該填哪些參數',
+  'featureHint.formatting': '自動整理整份或選取部分程式碼的縮排與空白',
+  'featureHint.definition': '跳到變數或函式定義的位置，或找出所有用到它的地方',
+  'featureHint.highlightRename': '標示同一個名稱出現的所有位置，並可一次全部改名',
+  'featureHint.outline': '快速列出所有函式和變數（Ctrl/Cmd+Shift+O）',
+  'featureHint.folding': '把程式區塊或註解收合起來，讓畫面更清爽',
+  'featureHint.inlayHints': '在程式碼中直接顯示參數名稱和型別',
+  'featureHint.semanticTokens': '依照用途（變數、函式、型別等）為程式碼上色',
+  'featureHint.documentLinks': '按住 Ctrl/Cmd 點擊 #include，查看標頭檔內容',
+  'featureHint.inlineCompletion': '以灰色文字預先顯示 AI 建議的程式碼，按 Tab 接受',
+
+  // Options page
+  'options.title': 'CYCU CAL 程式碼編輯器 – 設定',
+  'options.tagline': '讓 CAL 寫程式更輕鬆：更好用的編輯器、即時錯誤提示，還有本機 AI 自動補全。',
+  'options.editor': '編輯器',
+  'options.useMonaco': '使用新版編輯器（Monaco）',
+  'options.useMonacoDesc': '用和 VS Code 相同的編輯器取代網站原本的編輯器。也可以在題目頁面的工具列上隨時切換。',
+  'options.language': '語言（Language）',
+  'options.languageDesc': '擴充功能介面的語言。已開啟的 CAL 頁面需要重新整理才會套用。',
+  'options.languageAuto': '跟隨瀏覽器',
+  'options.theme': '外觀主題',
+  'options.themeDesc': '編輯器的配色。',
+  'options.themeLight': '淺色',
+  'options.themeDark': '深色',
+  'options.minimap': '程式碼縮圖',
+  'options.minimapDesc': '在編輯器右側顯示整份程式碼的縮小預覽，方便快速捲動。',
+  'options.fontFamily': '字型',
+  'options.fontFamilyDesc': '想使用的字型名稱，可用逗號分隔多個，例如 {example}。留空則使用網站預設字型。',
+  'options.fontFamilyPlaceholder': '網站預設字型',
+  'options.toolbar': '工具列',
+  'options.clangdBadge': '程式分析狀態',
+  'options.clangdBadgeDesc': '顯示負責檢查程式碼的工具（clangd）目前是啟動中、已就緒，還是發生錯誤。',
+  'options.slmBadge': 'AI 狀態',
+  'options.slmBadgeDesc': '開啟 AI 自動補全時，顯示 AI 模型目前的狀態（下載中、載入中、已就緒）。',
+  'options.formatButton': '「排版」按鈕',
+  'options.formatButtonDesc':
+    '一鍵把程式碼的縮排和空白整理整齊（也可以按 Shift+Alt+F）。需要開啟下方的「自動排版」功能。',
+  'options.features': '寫程式輔助功能',
+  'options.featuresHint':
+    '這些功能由 clangd 提供，它是一個 C 語言分析工具，完全在你的瀏覽器裡執行。修改後會立即套用到已開啟的編輯器。',
+  'options.slm': '本機 AI 自動補全',
+  'options.slmContext': '參考範圍',
+  'options.slmContextDesc':
+    'AI 一次能讀取多少程式碼（單位是 token，大約是一小段文字）。數字越大，AI 能看到越多程式碼，但會用掉更多記憶體、回應也比較慢。',
+  'options.slmModel': 'AI 模型',
+  'options.slmModelDesc': '模型越大，建議的程式碼越準確，但載入和回應都會比較慢。',
+  'options.slmNote':
+    'AI 在你自己的電腦上執行，只會讀取編輯器裡的程式碼，不會傳送任何資料到伺服器。若模型沒有包含在擴充功能中，第一次使用時會從 Hugging Face 下載一次，之後就存在這個瀏覽器裡。',
+  'options.slmIncluded': (size) => `已內建 · ${size}`,
+  'options.slmDownload': (size) => `需下載 ${size}`,
+  'options.slmConfirm': (label, size, repo) =>
+    `本機 AI 自動補全需要從 Hugging Face（${repo}）下載 ${label}，大小約 ${size}。\n\n` +
+    '下載後會存在這個瀏覽器中，並在你的電腦上執行。要繼續嗎？',
+  'options.compileFlags': '編譯選項（進階）',
+  'options.clangdFlags': 'clangd 編譯參數',
+  'options.clangdFlagsDesc': '檢查程式碼時使用的編譯參數，每行一個。不確定的話保留預設值即可。',
+  'options.resetFlags': '恢復預設值',
+  'options.saved': '已儲存',
+  'options.saveFailed': (error) => `儲存失敗：${error}`,
+  'options.loadFailed': (error) => `無法載入設定：${error}`,
+};

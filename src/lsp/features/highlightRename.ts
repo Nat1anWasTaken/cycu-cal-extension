@@ -4,6 +4,7 @@
 import type * as Monaco from 'monaco-editor/editor/editor.api.js';
 import type * as P from 'vscode-languageserver-protocol';
 import type { FeatureContext } from '../monaco-bridge';
+import { t } from '../../shared/i18n';
 import {
   rangeTouchesLocks,
   toLspPosition,
@@ -55,13 +56,13 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
           return {
             range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 },
             text: '',
-            rejectReason: '這個名稱無法重新命名。',
+            rejectReason: t('rename.unavailable'),
           };
         }
         const lspRange = 'range' in r ? r.range : r;
         const range = toMonacoRange(lspRange);
         if (rangeTouchesLocks(lspRange, ctx.getLocks())) {
-          return { range, text: '', rejectReason: '這個名稱位於不可編輯的行，無法重新命名。' };
+          return { range, text: '', rejectReason: t('rename.locked') };
         }
         return { range, text: 'placeholder' in r ? r.placeholder : model.getValueInRange(range) };
       },
@@ -72,9 +73,9 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
           { ...pos(model, position), newName } satisfies P.RenameParams,
           token,
         );
-        if (!we) return { edits: [], rejectReason: '重新命名失敗。' };
+        if (!we) return { edits: [], rejectReason: t('rename.failed') };
         const reason = workspaceEditRejection(we, bridge.uri, ctx.getLocks());
-        if (reason) return { edits: [], rejectReason: `無法重新命名：${reason}` };
+        if (reason) return { edits: [], rejectReason: t('rename.rejected', reason) };
         return toMonacoWorkspaceEdit(we, bridge.toModelUri, model.getVersionId());
       },
     }),
