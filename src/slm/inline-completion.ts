@@ -5,7 +5,14 @@
 // ever sent: never the problem statement or other page content.
 
 import type * as Monaco from 'monaco-editor/editor/editor.api.js';
-import { SLM_PORT, type EnsureOffscreenResponse, type SlmPortIn, type SlmPortOut, type SlmStatus, type ToBackground } from '../shared/protocol';
+import {
+  SLM_PORT,
+  type EnsureOffscreenResponse,
+  type SlmPortIn,
+  type SlmPortOut,
+  type SlmStatus,
+  type ToBackground,
+} from '../shared/protocol';
 import type { Settings } from '../shared/settings';
 import { trimContext } from './fim';
 
@@ -78,7 +85,11 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
 
   function sendLoad(): void {
     const key = `${settings.slmModel}@${settings.slmContextTokens}`;
-    if (port && sentLoad !== key && send({ type: 'load', modelId: settings.slmModel, contextTokens: settings.slmContextTokens })) {
+    if (
+      port &&
+      sentLoad !== key &&
+      send({ type: 'load', modelId: settings.slmModel, contextTokens: settings.slmContextTokens })
+    ) {
       sentLoad = key;
     }
   }
@@ -103,8 +114,7 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
     connecting = true;
     try {
       const res = (await chrome.runtime.sendMessage({ type: 'ensureOffscreen' } satisfies ToBackground)) as
-        | EnsureOffscreenResponse
-        | undefined;
+        EnsureOffscreenResponse | undefined;
       if (!enabled()) return;
       if (!res?.ok) throw new Error(res?.error ?? 'offscreen document unavailable');
       const p = chrome.runtime.connect({ name: SLM_PORT });
@@ -183,7 +193,10 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
         const lf = monaco.editor.EndOfLinePreference.LF;
         const ctx = trimContext(
           m.getValueInRange(new monaco.Range(1, 1, position.lineNumber, position.column), lf),
-          m.getValueInRange(new monaco.Range(position.lineNumber, position.column, lastLine, m.getLineMaxColumn(lastLine)), lf),
+          m.getValueInRange(
+            new monaco.Range(position.lineNumber, position.column, lastLine, m.getLineMaxColumn(lastLine)),
+            lf,
+          ),
           // The host trims to the same budget again.
           settings.slmContextTokens,
         );
@@ -195,13 +208,20 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
 
         // Multi-line items must replace up to the end of the line: re-append the rest of the line.
         const endCol = m.getLineMaxColumn(position.lineNumber);
-        const rest = m.getValueInRange(new monaco.Range(position.lineNumber, position.column, position.lineNumber, endCol));
+        const rest = m.getValueInRange(
+          new monaco.Range(position.lineNumber, position.column, position.lineNumber, endCol),
+        );
         const multiLine = text.includes('\n');
         return {
           items: [
             {
               insertText: multiLine ? text + rest : text,
-              range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, multiLine ? endCol : position.column),
+              range: new monaco.Range(
+                position.lineNumber,
+                position.column,
+                position.lineNumber,
+                multiLine ? endCol : position.column,
+              ),
             },
           ],
         };

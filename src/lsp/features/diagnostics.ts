@@ -14,7 +14,11 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
   const apply = (list: P.Diagnostic[]) => {
     diagnostics = list;
     if (model.isDisposed()) return;
-    monaco.editor.setModelMarkers(model, MARKER_OWNER, list.map((d) => toMarker(monaco, d, bridge.toModelUri)));
+    monaco.editor.setModelMarkers(
+      model,
+      MARKER_OWNER,
+      list.map((d) => toMarker(monaco, d, bridge.toModelUri)),
+    );
   };
   apply(bridge.lastDiagnostics);
 
@@ -28,7 +32,10 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
         async provideCodeActions(m, range, context, token) {
           if (!bridge.isOurs(m)) return undefined;
           const diags = context.markers
-            .filter((mk) => (mk as { owner?: string }).owner === undefined || (mk as { owner?: string }).owner === MARKER_OWNER)
+            .filter(
+              (mk) =>
+                (mk as { owner?: string }).owner === undefined || (mk as { owner?: string }).owner === MARKER_OWNER,
+            )
             .map((mk) => diagnosticForMarker(mk, diagnostics))
             .filter((d): d is P.Diagnostic => !!d);
           const result = await bridge.request<Array<P.Command | P.CodeAction>>(
@@ -36,7 +43,11 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
             {
               textDocument: bridge.textDocument,
               range: toLspRange(range),
-              context: { diagnostics: diags, only: context.only ? [context.only] : undefined, triggerKind: context.trigger },
+              context: {
+                diagnostics: diags,
+                only: context.only ? [context.only] : undefined,
+                triggerKind: context.trigger,
+              },
             } satisfies P.CodeActionParams,
             token,
           );

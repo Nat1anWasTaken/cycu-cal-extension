@@ -125,7 +125,10 @@ self.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
         const pct = total ? Math.floor((loaded / total) * 100) : -1;
         if (pct !== lastPct) {
           lastPct = pct;
-          post({ type: 'progress', detail: total ? `loading clangd ${pct}%` : `loading clangd ${(loaded / 1e6) | 0} MB` });
+          post({
+            type: 'progress',
+            detail: total ? `loading clangd ${pct}%` : `loading clangd ${(loaded / 1e6) | 0} MB`,
+          });
         }
         ctl.enqueue(chunk);
       },
@@ -158,7 +161,10 @@ function writeConfig(fs: EmFS, compileFlags: string[]) {
   } catch {
     /* exists */
   }
-  fs.writeFile('/workspace/.clangd', JSON.stringify({ CompileFlags: { Add: [...compileFlags, ...systemFlags(compileFlags)] } }));
+  fs.writeFile(
+    '/workspace/.clangd',
+    JSON.stringify({ CompileFlags: { Add: [...compileFlags, ...systemFlags(compileFlags)] } }),
+  );
   fs.writeFile('/workspace/.clang-format', CLANG_FORMAT);
 }
 

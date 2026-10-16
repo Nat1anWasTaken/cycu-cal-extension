@@ -31,7 +31,13 @@ test('requests get increasing ids and resolve by id, out of order', async () => 
   const { sent, client } = fakePort();
   const a = client.request('textDocument/hover', { a: 1 });
   const b = client.request('textDocument/completion', { b: 2 });
-  assert.deepEqual(sent.map((m) => [m.id, m.method]), [[1, 'textDocument/hover'], [2, 'textDocument/completion']]);
+  assert.deepEqual(
+    sent.map((m) => [m.id, m.method]),
+    [
+      [1, 'textDocument/hover'],
+      [2, 'textDocument/completion'],
+    ],
+  );
   client.handleMessage({ jsonrpc: '2.0', id: 2, result: 'B' });
   client.handleMessage({ jsonrpc: '2.0', id: 1, result: null });
   assert.equal(await b, 'B');

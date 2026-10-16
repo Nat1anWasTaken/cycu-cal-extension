@@ -32,7 +32,10 @@ const check = (name, ok, info = '') => {
 };
 
 if (!process.env.SKIP_BUILD) {
-  execFileSync('node', [join(root, 'scripts/build.mjs'), ...(OFFLINE ? [`--offline=${MODEL}`] : [])], { stdio: 'inherit', env: { ...process.env, OUT_DIR } });
+  execFileSync('node', [join(root, 'scripts/build.mjs'), ...(OFFLINE ? [`--offline=${MODEL}`] : [])], {
+    stdio: 'inherit',
+    env: { ...process.env, OUT_DIR },
+  });
 }
 
 async function cdp(wsUrl, label) {
@@ -50,9 +53,12 @@ async function cdp(wsUrl, label) {
       pending.delete(m.id);
     } else if (m.method === 'Runtime.consoleAPICalled' && label) {
       const text = m.params.args.map((a) => a.value ?? a.description).join(' ');
-      if (m.params.type === 'error' || m.params.type === 'warning') console.log(`  [${label} ${m.params.type}] ${text.slice(0, 300)}`);
+      if (m.params.type === 'error' || m.params.type === 'warning')
+        console.log(`  [${label} ${m.params.type}] ${text.slice(0, 300)}`);
     } else if (m.method === 'Runtime.exceptionThrown' && label) {
-      console.log(`  [${label} exception] ${m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text}`);
+      console.log(
+        `  [${label} exception] ${m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text}`,
+      );
     }
   };
   const send = (method, params = {}) =>
@@ -65,7 +71,8 @@ async function cdp(wsUrl, label) {
   const evaluate = async (expression) => {
     const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
     if (r.error) throw new Error(r.error.message);
-    if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description ?? r.result.exceptionDetails.text);
+    if (r.result.exceptionDetails)
+      throw new Error(r.result.exceptionDetails.exception?.description ?? r.result.exceptionDetails.text);
     return r.result.result.value;
   };
   return { evaluate, close: () => ws.close() };
@@ -96,7 +103,9 @@ async function launch(profile) {
       `--disable-extensions-except=${OUT_DIR}`,
       '--no-first-run',
       '--no-default-browser-check',
-      ...(OFFLINE ? ['--host-resolver-rules=MAP huggingface.co ~NOTFOUND, MAP *.huggingface.co ~NOTFOUND, MAP *.hf.co ~NOTFOUND'] : []),
+      ...(OFFLINE
+        ? ['--host-resolver-rules=MAP huggingface.co ~NOTFOUND, MAP *.huggingface.co ~NOTFOUND, MAP *.hf.co ~NOTFOUND']
+        : []),
       'about:blank',
     ],
     { stdio: 'ignore' },
@@ -172,7 +181,11 @@ try {
   check('offscreen crossOriginIsolated', (await off.evaluate('self.crossOriginIsolated')) === true);
 
   const first = await load(sw, 'run 1');
-  check('first load reaches ready', first.last.status === 'ready', `${first.statuses}; ${(first.ms / 1000).toFixed(1)} s; ${first.last.detail ?? ''}`);
+  check(
+    'first load reaches ready',
+    first.last.status === 'ready',
+    `${first.statuses}; ${(first.ms / 1000).toFixed(1)} s; ${first.last.detail ?? ''}`,
+  );
   if (OFFLINE) check('first load does not download', !first.sawDownload, first.statuses);
   else check('first load reports downloading progress', first.sawDownload);
   if (first.last.status !== 'ready') throw new Error(`load failed: ${first.last.detail}`);
@@ -180,7 +193,11 @@ try {
   const cases = [
     ['for loop body', 'int sum(int *a, int n) {\n\tint s = 0;\n\tfor (int i = 0; i < n; i++) {', '\n\treturn s;\n}\n'],
     ['printf line', '#include <stdio.h>\n\nint main(void) {\n\tint n = 5;\n\t', '\n\treturn 0;\n}\n'],
-    ['swap function', '#include <stdio.h>\n\nvoid swap(int *a, int *b) {\n\t', '\n}\n\nint main(void) {\n\tint x = 1, y = 2;\n\tswap(&x, &y);\n\treturn 0;\n}\n'],
+    [
+      'swap function',
+      '#include <stdio.h>\n\nvoid swap(int *a, int *b) {\n\t',
+      '\n}\n\nint main(void) {\n\tint x = 1, y = 2;\n\tswap(&x, &y);\n\treturn 0;\n}\n',
+    ],
   ];
   let id = 1;
   for (const [name, prefix, suffix] of cases) {
@@ -198,7 +215,11 @@ try {
     slm.postMessage({ type: 'cancel', id: 900 });
     return slmWait((x) => x.id === 900, 60000);
   })()`);
-  check('cancel -> completionError cancelled', cancelled.type === 'completionError' && cancelled.error === 'cancelled', JSON.stringify(cancelled));
+  check(
+    'cancel -> completionError cancelled',
+    cancelled.type === 'completionError' && cancelled.error === 'cancelled',
+    JSON.stringify(cancelled),
+  );
 
   // Supersede: a newer request aborts the older one; only the newer one completes.
   const superseded = await sw.evaluate(`(async () => {
@@ -207,7 +228,11 @@ try {
     const old = await slmWait((x) => x.id === 901, 60000);
     return { old, r };
   })()`);
-  check('newer request supersedes older', superseded.old.type === 'completionError' && superseded.r.type === 'completion', `${superseded.old.error}; new: ${JSON.stringify(superseded.r.text)} in ${superseded.r.ms} ms`);
+  check(
+    'newer request supersedes older',
+    superseded.old.type === 'completionError' && superseded.r.type === 'completion',
+    `${superseded.old.error}; new: ${JSON.stringify(superseded.r.text)} in ${superseded.r.ms} ms`,
+  );
 
   browser.proc.kill();
   await sleep(1500);
@@ -215,7 +240,11 @@ try {
   // ---- run 2: same profile, model must come from the OPFS cache ------------------------
   browser = await launch(profile);
   const second = await load(browser.sw, 'run 2');
-  check('cached load reaches ready without downloading', second.last.status === 'ready' && !second.sawDownload, `${second.statuses}; ${(second.ms / 1000).toFixed(1)} s`);
+  check(
+    'cached load reaches ready without downloading',
+    second.last.status === 'ready' && !second.sawDownload,
+    `${second.statuses}; ${(second.ms / 1000).toFixed(1)} s`,
+  );
   const [name, prefix, suffix] = cases[0];
   const after = await browser.sw.evaluate(`slmComplete(1, ${JSON.stringify(prefix)}, ${JSON.stringify(suffix)})`);
   console.log(`  [${name}] after cached load: ${after.ms} ms -> ${JSON.stringify(after.text)}`);

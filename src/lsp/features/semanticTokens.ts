@@ -31,7 +31,10 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
           delta && lastResultId
             ? await bridge.request<P.SemanticTokens | P.SemanticTokensDelta>(
                 'textDocument/semanticTokens/full/delta',
-                { textDocument: bridge.textDocument, previousResultId: lastResultId } satisfies P.SemanticTokensDeltaParams,
+                {
+                  textDocument: bridge.textDocument,
+                  previousResultId: lastResultId,
+                } satisfies P.SemanticTokensDeltaParams,
                 token,
               )
             : await bridge.request<P.SemanticTokens>(

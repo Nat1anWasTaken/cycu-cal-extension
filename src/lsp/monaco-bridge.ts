@@ -55,7 +55,12 @@ export interface HeaderModelsLike {
   /** Returns (creating if needed) a read-only model for a non-workspace file such as a system header. */
   ensure(lspUri: string): Promise<Monaco.editor.ITextModel | null>;
   /** Shows a header read-only in a peek widget in `editor`, anchored at `anchor` (default: cursor). */
-  peek(editor: Monaco.editor.ICodeEditor, lspUri: string, range?: Monaco.IRange, anchor?: Monaco.IPosition): Promise<boolean>;
+  peek(
+    editor: Monaco.editor.ICodeEditor,
+    lspUri: string,
+    range?: Monaco.IRange,
+    anchor?: Monaco.IPosition,
+  ): Promise<boolean>;
 }
 
 export type FeatureRegister = (ctx: FeatureContext) => Monaco.IDisposable;
@@ -65,15 +70,55 @@ const BACKOFF_MIN_MS = 500;
 const BACKOFF_MAX_MS = 30_000;
 
 export const SEMANTIC_TOKEN_TYPES = [
-  'namespace', 'type', 'class', 'enum', 'interface', 'struct', 'typeParameter', 'parameter', 'variable',
-  'property', 'enumMember', 'event', 'function', 'method', 'macro', 'keyword', 'modifier', 'comment',
-  'string', 'number', 'regexp', 'operator', 'decorator', 'label', 'concept', 'bracket',
+  'namespace',
+  'type',
+  'class',
+  'enum',
+  'interface',
+  'struct',
+  'typeParameter',
+  'parameter',
+  'variable',
+  'property',
+  'enumMember',
+  'event',
+  'function',
+  'method',
+  'macro',
+  'keyword',
+  'modifier',
+  'comment',
+  'string',
+  'number',
+  'regexp',
+  'operator',
+  'decorator',
+  'label',
+  'concept',
+  'bracket',
 ];
 export const SEMANTIC_TOKEN_MODIFIERS = [
-  'declaration', 'definition', 'readonly', 'static', 'deprecated', 'abstract', 'async', 'modification',
-  'documentation', 'defaultLibrary', 'deduced', 'virtual', 'dependentName', 'usedAsMutableReference',
-  'usedAsMutablePointer', 'constructorOrDestructor', 'userDefined', 'functionScope', 'classScope',
-  'fileScope', 'globalScope',
+  'declaration',
+  'definition',
+  'readonly',
+  'static',
+  'deprecated',
+  'abstract',
+  'async',
+  'modification',
+  'documentation',
+  'defaultLibrary',
+  'deduced',
+  'virtual',
+  'dependentName',
+  'usedAsMutableReference',
+  'usedAsMutablePointer',
+  'constructorOrDestructor',
+  'userDefined',
+  'functionScope',
+  'classScope',
+  'fileScope',
+  'globalScope',
 ];
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
@@ -130,7 +175,9 @@ export function clientCapabilities(): P.ClientCapabilities {
       },
       codeAction: {
         codeActionLiteralSupport: {
-          codeActionKind: { valueSet: ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source'] },
+          codeActionKind: {
+            valueSet: ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source'],
+          },
         },
         isPreferredSupport: true,
       },
@@ -280,7 +327,9 @@ export class LspBridge {
     if (this.disposed) return;
     if (this.ready) {
       this.flush();
-      this.client.notify('textDocument/didClose', { textDocument: this.textDocument } satisfies P.DidCloseTextDocumentParams);
+      this.client.notify('textDocument/didClose', {
+        textDocument: this.textDocument,
+      } satisfies P.DidCloseTextDocumentParams);
     }
     this.disposed = true;
     for (const s of this.subs) s.dispose();

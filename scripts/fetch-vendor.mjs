@@ -76,7 +76,9 @@ async function fetchOne(file) {
       break;
     } catch (e) {
       if (attempt >= MAX_ATTEMPTS) throw e;
-      console.warn(`  ${e.code ?? e.message}; resuming from ${(partSize(tmp) / 1e6).toFixed(1)} MB (attempt ${attempt + 1}/${MAX_ATTEMPTS})`);
+      console.warn(
+        `  ${e.code ?? e.message}; resuming from ${(partSize(tmp) / 1e6).toFixed(1)} MB (attempt ${attempt + 1}/${MAX_ATTEMPTS})`,
+      );
     }
   }
 
@@ -86,7 +88,9 @@ async function fetchOne(file) {
   const got = sha256(buf);
   if (file.sha256 !== 'PIN_ME' && got !== file.sha256) {
     rmSync(tmp);
-    throw new Error(`${file.path}: sha256 mismatch\n  expected ${file.sha256}\n  got      ${got}\nUpstream changed; verify it and re-pin.`);
+    throw new Error(
+      `${file.path}: sha256 mismatch\n  expected ${file.sha256}\n  got      ${got}\nUpstream changed; verify it and re-pin.`,
+    );
   }
   renameSync(tmp, abs);
   console.log(`✓ ${file.path} ${(buf.length / 1e6).toFixed(1)} MB sha256=${got}`);

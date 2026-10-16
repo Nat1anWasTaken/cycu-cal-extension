@@ -150,7 +150,10 @@ async function main() {
 
   try {
     const version = await waitFor(
-      () => fetch(`http://127.0.0.1:${port}/json/version`).then((r) => r.json()).catch(() => null),
+      () =>
+        fetch(`http://127.0.0.1:${port}/json/version`)
+          .then((r) => r.json())
+          .catch(() => null),
       20_000,
       'DevTools endpoint',
     );
@@ -168,7 +171,8 @@ async function main() {
       console.log('--load-extension ignored; trying Extensions.loadUnpacked');
       await cdp.send('Extensions.loadUnpacked', { path: EXT });
       sw = await waitFor(
-        async () => (await targets()).find((t) => t.type === 'service_worker' && t.url.startsWith('chrome-extension://')),
+        async () =>
+          (await targets()).find((t) => t.type === 'service_worker' && t.url.startsWith('chrome-extension://')),
         10_000,
         'extension service worker',
       );
@@ -178,7 +182,10 @@ async function main() {
     const { sessionId: swS } = await cdp.send('Target.attachToTarget', { targetId: sw.targetId, flatten: true });
 
     // 1. background: ensureOffscreen (twice concurrently to exercise the creation guard).
-    await cdp.eval(swS, `Promise.all([__calEnsureOffscreen(), __calEnsureOffscreen(), __calEnsureOffscreen()]).then(() => 'ok')`);
+    await cdp.eval(
+      swS,
+      `Promise.all([__calEnsureOffscreen(), __calEnsureOffscreen(), __calEnsureOffscreen()]).then(() => 'ok')`,
+    );
     const offscreen = await waitFor(
       async () => (await targets()).find((t) => t.url.includes('/src/offscreen/offscreen.html')),
       10_000,
@@ -187,20 +194,35 @@ async function main() {
     const offCount = (await targets()).filter((t) => t.url.includes('/src/offscreen/offscreen.html')).length;
     check('ensureOffscreen creates exactly one offscreen document', offCount === 1, `${offCount} found`);
     await cdp.eval(swS, `__calEnsureOffscreen().then(() => 'ok')`);
-    const { sessionId: offS } = await cdp.send('Target.attachToTarget', { targetId: offscreen.targetId, flatten: true });
+    const { sessionId: offS } = await cdp.send('Target.attachToTarget', {
+      targetId: offscreen.targetId,
+      flatten: true,
+    });
     await cdp.send('Runtime.enable', {}, offS);
     cdp.handlers.push((m) => {
       if (m.sessionId === offS && m.method === 'Runtime.consoleAPICalled')
-        console.log(`  [offscreen ${m.params.type}]`, m.params.args.map((a) => a.value ?? a.description).join(' ').slice(0, 300));
+        console.log(
+          `  [offscreen ${m.params.type}]`,
+          m.params.args
+            .map((a) => a.value ?? a.description)
+            .join(' ')
+            .slice(0, 300),
+        );
       if (m.sessionId === offS && m.method === 'Runtime.exceptionThrown')
-        console.log('  [offscreen exception]', m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text);
+        console.log(
+          '  [offscreen exception]',
+          m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text,
+        );
     });
     const coi = await cdp.eval(offS, `({ coi: self.crossOriginIsolated, sab: typeof SharedArrayBuffer })`);
     check('offscreen document is crossOriginIsolated', coi.coi === true && coi.sab === 'function', JSON.stringify(coi));
 
     // 2. Port A: hello → status → initialize.
     await cdp.eval(swS, SW_HELPERS);
-    const t0 = await cdp.eval(swS, `(T.open('a'), T.hello('a', ['-xc', '-std=gnu11', '-Wall', '-Wextra']), performance.now())`);
+    const t0 = await cdp.eval(
+      swS,
+      `(T.open('a'), T.hello('a', ['-xc', '-std=gnu11', '-Wall', '-Wextra']), performance.now())`,
+    );
     const init = await cdp.eval(
       swS,
       `T.request('a', 'initialize', { processId: null, rootUri: 'file:///workspace', capabilities: {
@@ -210,18 +232,41 @@ async function main() {
     );
     const st = await cdp.eval(swS, `T.statuses('a')`);
     const ready = st.find((s) => s.status === 'ready');
-    check('status loading → ready', st[0]?.status === 'loading' && !!ready, st.map((s) => `${s.status}${s.detail ? `(${s.detail})` : ''}`).filter((v, i, a) => a.indexOf(v) === i).slice(0, 8).join(', ') + ' … ' + st.at(-1).status);
+    check(
+      'status loading → ready',
+      st[0]?.status === 'loading' && !!ready,
+      st
+        .map((s) => `${s.status}${s.detail ? `(${s.detail})` : ''}`)
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .slice(0, 8)
+        .join(', ') +
+        ' … ' +
+        st.at(-1).status,
+    );
     const tReady = ready ? ready.t - t0 : NaN;
     const tInit = (await cdp.eval(swS, `performance.now()`)) - t0;
-    check('initialize returns clangd capabilities', !!init.result?.capabilities?.hoverProvider, `serverInfo=${JSON.stringify(init.result?.serverInfo)}`);
-    console.log(`  time to ready: ${(tReady / 1000).toFixed(2)} s; to initialize result: ${(tInit / 1000).toFixed(2)} s`);
+    check(
+      'initialize returns clangd capabilities',
+      !!init.result?.capabilities?.hoverProvider,
+      `serverInfo=${JSON.stringify(init.result?.serverInfo)}`,
+    );
+    console.log(
+      `  time to ready: ${(tReady / 1000).toFixed(2)} s; to initialize result: ${(tInit / 1000).toFixed(2)} s`,
+    );
     await cdp.eval(swS, `T.notify('a', 'initialized', {})`);
 
     // 3. didOpen with a type error + CJK/emoji comment → publishDiagnostics.
     const uriA = 'file:///workspace/520501-a1b2.c';
-    await cdp.eval(swS, `T.notify('a', 'textDocument/didOpen', { textDocument: { uri: '${uriA}', languageId: 'c', version: 1, text: ${JSON.stringify(SRC_A)} } })`);
+    await cdp.eval(
+      swS,
+      `T.notify('a', 'textDocument/didOpen', { textDocument: { uri: '${uriA}', languageId: 'c', version: 1, text: ${JSON.stringify(SRC_A)} } })`,
+    );
     const tOpen = Date.now();
-    const diagsA = await waitFor(async () => (await cdp.eval(swS, `T.diags('a', '${uriA}')`)).at(-1), 60_000, 'diagnostics A');
+    const diagsA = await waitFor(
+      async () => (await cdp.eval(swS, `T.diags('a', '${uriA}')`)).at(-1),
+      60_000,
+      'diagnostics A',
+    );
     const d0 = diagsA.diagnostics.find((d) => /int|conversion|char/i.test(d.message));
     check(
       'publishDiagnostics reports the type error at the right UTF-16 column after CJK + emoji (12, not byte 16)',
@@ -230,48 +275,115 @@ async function main() {
     );
 
     // 4. hover on printf (line 4, after a tab).
-    const hover = await cdp.eval(swS, `T.request('a', 'textDocument/hover', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 3 } })`);
+    const hover = await cdp.eval(
+      swS,
+      `T.request('a', 'textDocument/hover', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 3 } })`,
+    );
     const hoverText = JSON.stringify(hover.result?.contents ?? '');
-    check('hover on printf shows its prototype', /printf/.test(hoverText) && /const char/.test(hoverText), hoverText.slice(0, 160));
+    check(
+      'hover on printf shows its prototype',
+      /printf/.test(hoverText) && /const char/.test(hoverText),
+      hoverText.slice(0, 160),
+    );
 
     // 5. completion inside "printf" (prefix "pri").
-    const comp = await cdp.eval(swS, `T.request('a', 'textDocument/completion', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 4 } })`);
+    const comp = await cdp.eval(
+      swS,
+      `T.request('a', 'textDocument/completion', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 4 } })`,
+    );
     const items = comp.result?.items ?? comp.result ?? [];
     const labels = items.map((i) => i.filterText ?? i.label);
-    check('completion for "pri" includes printf', labels.some((l) => /^printf/.test(l.trim())), `${items.length} items: ${labels.slice(0, 6).join(', ')}`);
+    check(
+      'completion for "pri" includes printf',
+      labels.some((l) => /^printf/.test(l.trim())),
+      `${items.length} items: ${labels.slice(0, 6).join(', ')}`,
+    );
 
     // 6. definition of printf → header URI, then cal/readFile serves it.
-    const def = await cdp.eval(swS, `T.request('a', 'textDocument/definition', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 3 } })`);
-    const defUri = (Array.isArray(def.result) ? def.result[0] : def.result)?.uri ?? (Array.isArray(def.result) ? def.result[0]?.targetUri : undefined);
-    const rf = await cdp.eval(swS, `T.request('a', 'cal/readFile', { uri: ${JSON.stringify(defUri ?? 'file:///usr/include/stdio.h')} })`);
-    check('cal/readFile returns header text for printf definition', typeof rf.result?.text === 'string' && rf.result.text.includes('printf'), `${defUri} (${rf.result?.text?.length ?? 'null'} chars)`);
+    const def = await cdp.eval(
+      swS,
+      `T.request('a', 'textDocument/definition', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 3 } })`,
+    );
+    const defUri =
+      (Array.isArray(def.result) ? def.result[0] : def.result)?.uri ??
+      (Array.isArray(def.result) ? def.result[0]?.targetUri : undefined);
+    const rf = await cdp.eval(
+      swS,
+      `T.request('a', 'cal/readFile', { uri: ${JSON.stringify(defUri ?? 'file:///usr/include/stdio.h')} })`,
+    );
+    check(
+      'cal/readFile returns header text for printf definition',
+      typeof rf.result?.text === 'string' && rf.result.text.includes('printf'),
+      `${defUri} (${rf.result?.text?.length ?? 'null'} chars)`,
+    );
     const rfMissing = await cdp.eval(swS, `T.request('a', 'cal/readFile', { uri: 'file:///nope/missing.h' })`);
     check('cal/readFile of a missing file returns null', rfMissing.result?.text === null);
 
     // 7. formatting uses tabs from .clang-format.
-    const fmt = await cdp.eval(swS, `T.request('a', 'textDocument/formatting', { textDocument: { uri: '${uriA}' }, options: { tabSize: 2, insertSpaces: false } })`);
-    check('formatting re-indents with tabs (.clang-format)', Array.isArray(fmt.result) && fmt.result.some((e) => e.newText.includes('\t')) && !fmt.result.some((e) => / {2}/.test(e.newText)), JSON.stringify(fmt.result));
+    const fmt = await cdp.eval(
+      swS,
+      `T.request('a', 'textDocument/formatting', { textDocument: { uri: '${uriA}' }, options: { tabSize: 2, insertSpaces: false } })`,
+    );
+    check(
+      'formatting re-indents with tabs (.clang-format)',
+      Array.isArray(fmt.result) &&
+        fmt.result.some((e) => e.newText.includes('\t')) &&
+        !fmt.result.some((e) => / {2}/.test(e.newText)),
+      JSON.stringify(fmt.result),
+    );
 
     // 8. Port B: cached initialize, own diagnostics, routing isolation.
     await cdp.eval(swS, `(T.open('b'), T.hello('b', ['-xc', '-std=gnu11', '-Wall', '-Wextra']), 'ok')`);
     const tB = Date.now();
-    const initB = await cdp.eval(swS, `T.request('b', 'initialize', { processId: null, rootUri: 'file:///workspace', capabilities: {} })`);
-    check('second port gets cached initialize result', JSON.stringify(initB.result) === JSON.stringify(init.result), `${Date.now() - tB} ms`);
+    const initB = await cdp.eval(
+      swS,
+      `T.request('b', 'initialize', { processId: null, rootUri: 'file:///workspace', capabilities: {} })`,
+    );
+    check(
+      'second port gets cached initialize result',
+      JSON.stringify(initB.result) === JSON.stringify(init.result),
+      `${Date.now() - tB} ms`,
+    );
     await cdp.eval(swS, `T.notify('b', 'initialized', {})`);
     const uriB = 'file:///workspace/520502-c3d4.c';
-    await cdp.eval(swS, `T.notify('b', 'textDocument/didOpen', { textDocument: { uri: '${uriB}', languageId: 'c', version: 1, text: ${JSON.stringify(SRC_B)} } })`);
-    const diagsB = await waitFor(async () => (await cdp.eval(swS, `T.diags('b', '${uriB}')`)).at(-1), 30_000, 'diagnostics B');
-    check('port B receives its diagnostics', diagsB.diagnostics.some((d) => /undefined_name|undeclared/.test(d.message)), diagsB.diagnostics.map((d) => d.message).join(' | '));
+    await cdp.eval(
+      swS,
+      `T.notify('b', 'textDocument/didOpen', { textDocument: { uri: '${uriB}', languageId: 'c', version: 1, text: ${JSON.stringify(SRC_B)} } })`,
+    );
+    const diagsB = await waitFor(
+      async () => (await cdp.eval(swS, `T.diags('b', '${uriB}')`)).at(-1),
+      30_000,
+      'diagnostics B',
+    );
+    check(
+      'port B receives its diagnostics',
+      diagsB.diagnostics.some((d) => /undefined_name|undeclared/.test(d.message)),
+      diagsB.diagnostics.map((d) => d.message).join(' | '),
+    );
     const leakA = await cdp.eval(swS, `T.diags('a', '${uriB}').length`);
     const leakB = await cdp.eval(swS, `T.diags('b', '${uriA}').length`);
-    check('diagnostics are routed only to the owning port', leakA === 0 && leakB === 0, `a got ${leakA} of B's, b got ${leakB} of A's`);
-    const hoverB = await cdp.eval(swS, `T.request('b', 'textDocument/hover', { textDocument: { uri: '${uriB}' }, position: { line: 0, character: 4 } })`);
-    check('requests on port B work (hover on f)', /function `f`/.test(JSON.stringify(hoverB.result ?? '')), JSON.stringify(hoverB.result?.contents ?? null).slice(0, 100));
+    check(
+      'diagnostics are routed only to the owning port',
+      leakA === 0 && leakB === 0,
+      `a got ${leakA} of B's, b got ${leakB} of A's`,
+    );
+    const hoverB = await cdp.eval(
+      swS,
+      `T.request('b', 'textDocument/hover', { textDocument: { uri: '${uriB}' }, position: { line: 0, character: 4 } })`,
+    );
+    check(
+      'requests on port B work (hover on f)',
+      /function `f`/.test(JSON.stringify(hoverB.result ?? '')),
+      JSON.stringify(hoverB.result?.contents ?? null).slice(0, 100),
+    );
 
     // 9. Disconnect B → host sends didClose for its URI; A keeps working.
     await cdp.eval(swS, `(T.close('b'), 'ok')`);
     await sleep(500);
-    const hover2 = await cdp.eval(swS, `T.request('a', 'textDocument/hover', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 3 } })`);
+    const hover2 = await cdp.eval(
+      swS,
+      `T.request('a', 'textDocument/hover', { textDocument: { uri: '${uriA}' }, position: { line: 4, character: 3 } })`,
+    );
     check('port A still works after port B disconnects', /printf/.test(JSON.stringify(hover2.result ?? '')));
     // After didClose clangd clears diagnostics for B's URI; nothing should reach A.
     const leakA2 = await cdp.eval(swS, `T.diags('a', '${uriB}').length`);
@@ -280,7 +392,9 @@ async function main() {
     check('no error status during the run', errs === 0);
 
     await cdp.eval(swS, `(T.close('a'), 'ok')`);
-    console.log(`\nclangd time to ready: ${(tReady / 1000).toFixed(2)} s (initialize result at ${(tInit / 1000).toFixed(2)} s)`);
+    console.log(
+      `\nclangd time to ready: ${(tReady / 1000).toFixed(2)} s (initialize result at ${(tInit / 1000).toFixed(2)} s)`,
+    );
   } catch (e) {
     check('e2e run completed', false, e.stack ?? String(e));
     if (stderr) console.log(stderr.split('\n').slice(-20).join('\n'));

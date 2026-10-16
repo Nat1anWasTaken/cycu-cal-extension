@@ -84,9 +84,11 @@ export function attachSlmPort(port: chrome.runtime.Port): void {
     switch (msg?.type) {
       case 'load':
         if (msg.modelId in SLM_MODELS) {
-          requestModel(msg.modelId, SLM_CONTEXT_SIZES.includes(msg.contextTokens) ? msg.contextTokens : SLM_CONTEXT_SIZES[0]);
-        }
-        else post(port, { type: 'status', status: 'error', detail: `unknown model ${msg.modelId}` });
+          requestModel(
+            msg.modelId,
+            SLM_CONTEXT_SIZES.includes(msg.contextTokens) ? msg.contextTokens : SLM_CONTEXT_SIZES[0],
+          );
+        } else post(port, { type: 'status', status: 'error', detail: `unknown model ${msg.modelId}` });
         break;
       case 'complete':
         complete(port, msg);
@@ -184,7 +186,10 @@ async function switchTo(id: SlmModelId, ctx: SlmContextTokens): Promise<void> {
     wllama = w;
     loadedModel = id;
     loadedCtx = ctx;
-    setStatus({ status: 'ready', detail: `${SLM_MODELS[id].label}, ${w.isMultithread() ? w.getNumThreads() : 1} threads` });
+    setStatus({
+      status: 'ready',
+      detail: `${SLM_MODELS[id].label}, ${w.isMultithread() ? w.getNumThreads() : 1} threads`,
+    });
   } catch (e) {
     await w.exit().catch(() => {});
     if (superseded(id, ctx)) return; // aborted because the user switched / disabled

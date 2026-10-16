@@ -18,7 +18,8 @@ const root = resolve(here, '../..');
 const aceDir = join(root, 'node_modules/ace-builds/src-min-noconflict');
 export const PORT = 5179;
 export const HTTPS_PORT = 5443;
-export const PRECODE = '#include <stdio.h>\n#include <stdlib.h>\n// 以上三行不可修改 (locked)\nint main(void) {\n\t\n\treturn 0;\n}\n';
+export const PRECODE =
+  '#include <stdio.h>\n#include <stdlib.h>\n// 以上三行不可修改 (locked)\nint main(void) {\n\t\n\treturn 0;\n}\n';
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css' };
 

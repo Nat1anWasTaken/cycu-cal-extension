@@ -55,7 +55,9 @@ export class HeaderModels implements HeaderModelsLike {
   }
 
   private async load(uri: Monaco.Uri): Promise<Monaco.editor.ITextModel | null> {
-    const res = await this.bridge.request<ReadFileResult>(READ_FILE_METHOD, { uri: uri.toString() } satisfies ReadFileParams);
+    const res = await this.bridge.request<ReadFileResult>(READ_FILE_METHOD, {
+      uri: uri.toString(),
+    } satisfies ReadFileParams);
     if (res?.text == null) return null;
     const key = uri.toString();
     const already = this.monaco.editor.getModel(uri);
@@ -80,12 +82,18 @@ export class HeaderModels implements HeaderModelsLike {
     resource: Monaco.Uri,
     selOrPos?: Monaco.IRange | Monaco.IPosition,
   ): Promise<boolean> {
-    if (resource.scheme !== 'file' || this.bridge.toModelUri(this.bridge.uri).toString() === resource.toString()) return false;
+    if (resource.scheme !== 'file' || this.bridge.toModelUri(this.bridge.uri).toString() === resource.toString())
+      return false;
     const range: Monaco.IRange | undefined = !selOrPos
       ? undefined
       : 'endLineNumber' in selOrPos
         ? selOrPos
-        : { startLineNumber: selOrPos.lineNumber, startColumn: selOrPos.column, endLineNumber: selOrPos.lineNumber, endColumn: selOrPos.column };
+        : {
+            startLineNumber: selOrPos.lineNumber,
+            startColumn: selOrPos.column,
+            endLineNumber: selOrPos.lineNumber,
+            endColumn: selOrPos.column,
+          };
     return this.peek(source, resource.toString(), range);
   }
 
@@ -93,15 +101,21 @@ export class HeaderModels implements HeaderModelsLike {
    * Shows `lspUri` (read-only) in a peek widget inside `editor`, anchored at `anchor`
    * (default: the cursor) and revealing `range` (default: top of the file).
    */
-  async peek(editor: Monaco.editor.ICodeEditor, lspUri: string, range?: Monaco.IRange, anchor?: Monaco.IPosition): Promise<boolean> {
+  async peek(
+    editor: Monaco.editor.ICodeEditor,
+    lspUri: string,
+    range?: Monaco.IRange,
+    anchor?: Monaco.IPosition,
+  ): Promise<boolean> {
     const model = await this.ensure(lspUri);
     const srcModel = editor.getModel();
     const pos = anchor ?? editor.getPosition();
     if (!model || !srcModel || !pos) return false;
     // Not public API: the standalone editor's command service runs the built-in
     // `editor.action.peekLocations(uri, position, locations, multiple)` command.
-    const commands = (editor as unknown as { _commandService?: { executeCommand(id: string, ...args: unknown[]): Promise<unknown> } })
-      ._commandService;
+    const commands = (
+      editor as unknown as { _commandService?: { executeCommand(id: string, ...args: unknown[]): Promise<unknown> } }
+    )._commandService;
     if (!commands) return false;
     const target = range ?? { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 };
     try {

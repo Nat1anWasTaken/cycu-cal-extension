@@ -106,7 +106,12 @@ function setupOnce(): void {
 
   // Built-in themes plus colours for clangd's semantic token types.
   monaco.editor.defineTheme('cal-light', { base: 'vs', inherit: true, colors: {}, rules: semanticTokenRules('light') });
-  monaco.editor.defineTheme('cal-dark', { base: 'vs-dark', inherit: true, colors: {}, rules: semanticTokenRules('dark') });
+  monaco.editor.defineTheme('cal-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    colors: {},
+    rules: semanticTokenRules('dark'),
+  });
 }
 
 export function themeFor(settings: Settings): string {
@@ -162,7 +167,11 @@ export function applyEditorSettings(ed: monaco.editor.IStandaloneCodeEditor, set
 }
 
 /** Replace the model text with one minimal, undoable edit (keeps cursor/scroll where possible). */
-export function setModelText(model: monaco.editor.ITextModel, target: string, selections: monaco.Selection[] | null = []): void {
+export function setModelText(
+  model: monaco.editor.ITextModel,
+  target: string,
+  selections: monaco.Selection[] | null = [],
+): void {
   const cur = model.getValue();
   if (cur === target) return;
   let p = 0;
@@ -175,7 +184,12 @@ export function setModelText(model: monaco.editor.ITextModel, target: string, se
   model.pushStackElement();
   model.pushEditOperations(
     selections,
-    [{ range: new monaco.Range(a.lineNumber, a.column, b.lineNumber, b.column), text: target.slice(p, target.length - s) }],
+    [
+      {
+        range: new monaco.Range(a.lineNumber, a.column, b.lineNumber, b.column),
+        text: target.slice(p, target.length - s),
+      },
+    ],
     () => null,
   );
   model.pushStackElement();

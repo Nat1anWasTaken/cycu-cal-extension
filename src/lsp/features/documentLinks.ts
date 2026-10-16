@@ -18,18 +18,23 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
   const { monaco, bridge, headers, editor } = ctx;
   const origin = new WeakMap<Monaco.languages.ILink, P.DocumentLink>();
 
-  const command = monaco.editor.registerCommand(PEEK_HEADER_COMMAND, (_accessor, target: unknown, line: unknown, column: unknown) => {
-    if (typeof target !== 'string') return;
-    const anchor = typeof line === 'number' && typeof column === 'number' ? { lineNumber: line, column } : undefined;
-    void headers.peek(editor, target, undefined, anchor);
-  });
+  const command = monaco.editor.registerCommand(
+    PEEK_HEADER_COMMAND,
+    (_accessor, target: unknown, line: unknown, column: unknown) => {
+      if (typeof target !== 'string') return;
+      const anchor = typeof line === 'number' && typeof column === 'number' ? { lineNumber: line, column } : undefined;
+      void headers.peek(editor, target, undefined, anchor);
+    },
+  );
 
   const toLink = (l: P.DocumentLink): Monaco.languages.ILink => {
     const range = toMonacoRange(l.range);
     const link: Monaco.languages.ILink = {
       range,
       url: l.target ? monaco.Uri.parse(linkCommandUri(l.target, range.startLineNumber, range.startColumn)) : undefined,
-      tooltip: l.tooltip ?? (l.target ? `Peek ${decodeURIComponent(l.target.replace(/^file:\/\//, ''))} (read-only)` : undefined),
+      tooltip:
+        l.tooltip ??
+        (l.target ? `Peek ${decodeURIComponent(l.target.replace(/^file:\/\//, ''))} (read-only)` : undefined),
     };
     origin.set(link, l);
     return link;

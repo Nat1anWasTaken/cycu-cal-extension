@@ -3,7 +3,14 @@
 
 import { isBundled } from '../shared/bundle';
 import { SLM_CONTEXT_SIZES, SLM_MODELS, type SlmContextTokens, type SlmModelId } from '../shared/protocol';
-import { DEFAULT_SETTINGS, FEATURE_LABELS, loadSettings, saveSettings, type FeatureId, type Settings } from '../shared/settings';
+import {
+  DEFAULT_SETTINGS,
+  FEATURE_LABELS,
+  loadSettings,
+  saveSettings,
+  type FeatureId,
+  type Settings,
+} from '../shared/settings';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -97,8 +104,13 @@ function read(): Partial<Settings> {
     showSlmBadge: showSlmBadge.checked,
     showFormatButton: showFormatButton.checked,
     slmModel: selectedModel(),
-    slmContextTokens: Number(slmContext.querySelector<HTMLInputElement>('input:checked')?.value ?? DEFAULT_SETTINGS.slmContextTokens) as SlmContextTokens,
-    compileFlags: compileFlags.value.split('\n').map((l) => l.trim()).filter(Boolean),
+    slmContextTokens: Number(
+      slmContext.querySelector<HTMLInputElement>('input:checked')?.value ?? DEFAULT_SETTINGS.slmContextTokens,
+    ) as SlmContextTokens,
+    compileFlags: compileFlags.value
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean),
     features,
   };
 }
@@ -142,7 +154,9 @@ for (const id of modelIds) {
   radio.value = id;
   const title = el('span', 'name', name);
   if (quant) title.append(el('span', 'quant', quant));
-  const badge = isBundled(id) ? el('span', 'badge included', `Included · ${sizeText(id)}`) : el('span', 'badge', `${sizeText(id)} download`);
+  const badge = isBundled(id)
+    ? el('span', 'badge included', `Included · ${sizeText(id)}`)
+    : el('span', 'badge', `${sizeText(id)} download`);
   row.append(radio, title, badge);
   slmModel.append(row);
   radios.set(id, radio);

@@ -64,7 +64,10 @@ export class LspHost {
   private flags: string[] | null = null;
   private nextId = 1;
   private pending = new Map<number, Pending>();
-  private init: { state: 'none' } | { state: 'pending'; waiters: { client: Client; id: Id }[] } | { state: 'done'; result: unknown } = {
+  private init:
+    | { state: 'none' }
+    | { state: 'pending'; waiters: { client: Client; id: Id }[] }
+    | { state: 'done'; result: unknown } = {
     state: 'none',
   };
   private initializedSent = false;

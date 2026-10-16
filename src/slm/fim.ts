@@ -15,7 +15,17 @@ export const REPO_NAME = '<|repo_name|>';
 export const FILE_SEP = '<|file_sep|>';
 
 /** Every control token that must end a completion (and never appear in editor text). */
-export const SPECIAL_TOKENS = [END_OF_TEXT, FIM_PAD, FIM_PREFIX, FIM_SUFFIX, FIM_MIDDLE, REPO_NAME, FILE_SEP, '<|im_end|>', '<|im_start|>'];
+export const SPECIAL_TOKENS = [
+  END_OF_TEXT,
+  FIM_PAD,
+  FIM_PREFIX,
+  FIM_SUFFIX,
+  FIM_MIDDLE,
+  REPO_NAME,
+  FILE_SEP,
+  '<|im_end|>',
+  '<|im_start|>',
+];
 
 /** Stop strings handed to the sampler. Blank lines with whitespace and dedents are handled by postprocess(). */
 export const STOP_SEQUENCES = [...SPECIAL_TOKENS, '\n\n'];

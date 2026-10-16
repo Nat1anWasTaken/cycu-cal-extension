@@ -19,19 +19,23 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
     return missing.size ? links.filter((l) => !missing.has(l.uri.toString())) : links;
   }
 
-  const query = (method: string) => async (model: Monaco.editor.ITextModel, position: Monaco.Position, token: Monaco.CancellationToken) => {
-    if (!bridge.isOurs(model)) return undefined;
-    const r = await bridge.request<LocResult>(
-      method,
-      { textDocument: bridge.textDocument, position: toLspPosition(position) } satisfies P.TextDocumentPositionParams,
-      token,
-    );
-    return resolve(r);
-  };
+  const query =
+    (method: string) =>
+    async (model: Monaco.editor.ITextModel, position: Monaco.Position, token: Monaco.CancellationToken) => {
+      if (!bridge.isOurs(model)) return undefined;
+      const r = await bridge.request<LocResult>(
+        method,
+        { textDocument: bridge.textDocument, position: toLspPosition(position) } satisfies P.TextDocumentPositionParams,
+        token,
+      );
+      return resolve(r);
+    };
 
   const subs = [
     monaco.languages.registerDefinitionProvider(ctx.selector, { provideDefinition: query('textDocument/definition') }),
-    monaco.languages.registerDeclarationProvider(ctx.selector, { provideDeclaration: query('textDocument/declaration') }),
+    monaco.languages.registerDeclarationProvider(ctx.selector, {
+      provideDeclaration: query('textDocument/declaration'),
+    }),
     monaco.languages.registerReferenceProvider(ctx.selector, {
       async provideReferences(model, position, context, token) {
         if (!bridge.isOurs(model)) return undefined;

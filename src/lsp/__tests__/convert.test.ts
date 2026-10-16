@@ -50,8 +50,14 @@ test('locks: filterEditsByLocks keeps the safe edits', () => {
     { range: R(2, 5, 2, 5), newText: ' ' },
   ];
   const { kept, dropped } = C.filterEditsByLocks(edits, locks);
-  assert.deepEqual(kept.map((e) => e.range.start.line), [4, 2]);
-  assert.deepEqual(dropped.map((e) => e.range.start.line), [0]);
+  assert.deepEqual(
+    kept.map((e) => e.range.start.line),
+    [4, 2],
+  );
+  assert.deepEqual(
+    dropped.map((e) => e.range.start.line),
+    [0],
+  );
 });
 
 test('completion: snippet, textEdit, label trimming, kinds, additionalTextEdits', () => {
@@ -82,24 +88,46 @@ test('completion: snippet, textEdit, label trimming, kinds, additionalTextEdits'
   assert.equal(item.sortText, '0001');
   assert.equal(item.detail, 'int');
 
-  const bullet = C.toMonacoCompletion(m, { label: '•strlen(const char *s)', kind: 3, filterText: 'strlen', insertText: 'strlen' }, {
-    startLineNumber: 2, startColumn: 3, endLineNumber: 2, endColumn: 5,
-  });
+  const bullet = C.toMonacoCompletion(
+    m,
+    { label: '•strlen(const char *s)', kind: 3, filterText: 'strlen', insertText: 'strlen' },
+    {
+      startLineNumber: 2,
+      startColumn: 3,
+      endLineNumber: 2,
+      endColumn: 5,
+    },
+  );
   assert.equal(bullet.label, 'strlen(const char *s)');
   assert.equal(bullet.filterText, 'strlen');
   assert.equal(bullet.insertTextRules, undefined);
   assert.deepEqual(bullet.range, { startLineNumber: 2, startColumn: 3, endLineNumber: 2, endColumn: 5 });
 
-  const ir = C.toMonacoCompletion(m, { label: 'stdio.h>', kind: 17, textEdit: { insert: R(0, 10, 0, 13), replace: R(0, 10, 0, 18), newText: 'stdio.h>' } }, {
-    startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1,
-  });
+  const ir = C.toMonacoCompletion(
+    m,
+    {
+      label: 'stdio.h>',
+      kind: 17,
+      textEdit: { insert: R(0, 10, 0, 13), replace: R(0, 10, 0, 18), newText: 'stdio.h>' },
+    },
+    {
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: 1,
+      endColumn: 1,
+    },
+  );
   assert.equal(ir.kind, m.languages.CompletionItemKind.File);
   assert.deepEqual(ir.range, {
     insert: { startLineNumber: 1, startColumn: 11, endLineNumber: 1, endColumn: 14 },
     replace: { startLineNumber: 1, startColumn: 11, endLineNumber: 1, endColumn: 19 },
   });
 
-  const kw = C.toMonacoCompletion(m, { label: 'struct', kind: 14, deprecated: true }, { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 });
+  const kw = C.toMonacoCompletion(
+    m,
+    { label: 'struct', kind: 14, deprecated: true },
+    { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 },
+  );
   assert.equal(kw.kind, m.languages.CompletionItemKind.Keyword);
   assert.equal(kw.insertText, 'struct');
   assert.deepEqual(kw.tags, [1]);
@@ -114,7 +142,12 @@ test('completion: CompletionList itemDefaults', () => {
     items: [{ label: 'x', insertText: 'x($1)' }],
   });
   assert.equal(incomplete, true);
-  const it = C.toMonacoCompletion(m, items[0], { startLineNumber: 9, startColumn: 9, endLineNumber: 9, endColumn: 9 }, defaults);
+  const it = C.toMonacoCompletion(
+    m,
+    items[0],
+    { startLineNumber: 9, startColumn: 9, endLineNumber: 9, endColumn: 9 },
+    defaults,
+  );
   assert.deepEqual(it.range, { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 3 });
   assert.equal(it.insertTextRules, 4);
   assert.deepEqual(C.completionItems(null).items, []);
@@ -130,7 +163,9 @@ test('markers: severity, code, tags, relatedInformation', () => {
       source: 'clang',
       message: 'incompatible pointer to integer conversion',
       tags: [1, 2],
-      relatedInformation: [{ location: { uri: 'file:///usr/include/stdio.h', range: R(0, 0, 0, 1) }, message: 'declared here' }],
+      relatedInformation: [
+        { location: { uri: 'file:///usr/include/stdio.h', range: R(0, 0, 0, 1) }, message: 'declared here' },
+      ],
     },
     mapUri,
   );
@@ -145,7 +180,11 @@ test('markers: severity, code, tags, relatedInformation', () => {
   assert.equal(mk.relatedInformation![0].message, 'declared here');
   assert.equal(C.toMarker(m, { range: R(0, 0, 0, 1), message: 'e' }, mapUri).severity, 8);
   assert.equal(C.toMarker(m, { range: R(0, 0, 0, 1), message: 'e', severity: 4 }, mapUri).severity, 1);
-  const withHref = C.toMarker(m, { range: R(0, 0, 0, 1), message: 'e', code: 1, codeDescription: { href: 'https://x/y' } }, mapUri);
+  const withHref = C.toMarker(
+    m,
+    { range: R(0, 0, 0, 1), message: 'e', code: 1, codeDescription: { href: 'https://x/y' } },
+    mapUri,
+  );
   assert.equal((withHref.code as { value: string }).value, '1');
   const diag = { range: R(4, 9, 4, 12), message: 'incompatible pointer to integer conversion' };
   assert.equal(C.diagnosticForMarker(mk, [{ range: R(0, 0, 0, 1), message: 'x' }, diag]), diag);
@@ -165,27 +204,49 @@ test('workspace edits: mapping and lock/other-file rejection', () => {
   assert.equal(mapped.edits.length, 2);
   const e0 = mapped.edits[0] as { resource: { toString(): string }; textEdit: unknown; versionId: number };
   assert.equal(e0.resource.toString(), doc);
-  assert.deepEqual(e0.textEdit, { range: { startLineNumber: 6, startColumn: 5, endLineNumber: 6, endColumn: 8 }, text: 'cnt' });
+  assert.deepEqual(e0.textEdit, {
+    range: { startLineNumber: 6, startColumn: 5, endLineNumber: 6, endColumn: 8 },
+    text: 'cnt',
+  });
   assert.equal(e0.versionId, 3);
 
   assert.equal(C.workspaceEditRejection(we, doc, []), undefined);
-  assert.match(C.workspaceEditRejection(we, doc, [{ start: { row: 7, column: 0 }, end: { row: 7, column: 20 } }])!, /locked line 8/);
-  assert.match(C.workspaceEditRejection(we, doc, [{ start: { row: 4, column: 0 }, end: { row: 5, column: 20 } }])!, /locked lines 5-6/);
+  assert.match(
+    C.workspaceEditRejection(we, doc, [{ start: { row: 7, column: 0 }, end: { row: 7, column: 20 } }])!,
+    /locked line 8/,
+  );
+  assert.match(
+    C.workspaceEditRejection(we, doc, [{ start: { row: 4, column: 0 }, end: { row: 5, column: 20 } }])!,
+    /locked lines 5-6/,
+  );
 
   const dc = {
     documentChanges: [
       { textDocument: { uri: doc, version: 2 }, edits: [{ range: R(1, 0, 1, 1), newText: 'a' }] },
-      { textDocument: { uri: 'file:///usr/include/stdio.h', version: null }, edits: [{ range: R(1, 0, 1, 1), newText: 'a' }] },
+      {
+        textDocument: { uri: 'file:///usr/include/stdio.h', version: null },
+        edits: [{ range: R(1, 0, 1, 1), newText: 'a' }],
+      },
     ],
   };
   assert.equal(C.flattenWorkspaceEdit(dc).edits.length, 2);
   assert.match(C.workspaceEditRejection(dc, doc, [])!, /another file/);
-  assert.match(C.workspaceEditRejection({ documentChanges: [{ kind: 'create', uri: 'file:///x.c' }] }, doc, [])!, /files/);
+  assert.match(
+    C.workspaceEditRejection({ documentChanges: [{ kind: 'create', uri: 'file:///x.c' }] }, doc, [])!,
+    /files/,
+  );
 });
 
 test('locations, symbols, highlights, folding, hover, signature help, semantic tokens', () => {
   const locs = C.toMonacoLocations(
-    [{ targetUri: 'file:///usr/include/stdio.h', targetRange: R(10, 0, 10, 40), targetSelectionRange: R(10, 4, 10, 10), originSelectionRange: R(2, 1, 2, 7) }],
+    [
+      {
+        targetUri: 'file:///usr/include/stdio.h',
+        targetRange: R(10, 0, 10, 40),
+        targetSelectionRange: R(10, 4, 10, 10),
+        originSelectionRange: R(2, 1, 2, 7),
+      },
+    ],
     mapUri,
   );
   assert.equal(locs[0].uri.toString(), 'file:///usr/include/stdio.h');
@@ -195,15 +256,28 @@ test('locations, symbols, highlights, folding, hover, signature help, semantic t
   assert.deepEqual(C.toMonacoLocations(null, mapUri), []);
 
   const syms = C.toMonacoSymbols([
-    { name: 'main', detail: 'int ()', kind: 12, range: R(2, 0, 5, 1), selectionRange: R(2, 4, 2, 8), children: [{ name: 'x', kind: 13, range: R(3, 1, 3, 9), selectionRange: R(3, 5, 3, 6) }] },
+    {
+      name: 'main',
+      detail: 'int ()',
+      kind: 12,
+      range: R(2, 0, 5, 1),
+      selectionRange: R(2, 4, 2, 8),
+      children: [{ name: 'x', kind: 13, range: R(3, 1, 3, 9), selectionRange: R(3, 5, 3, 6) }],
+    },
   ]);
   assert.equal(syms[0].kind, 11); // Function
   assert.equal(syms[0].children![0].kind, 12); // Variable
   assert.equal(syms[0].children![0].detail, '');
 
-  assert.deepEqual(C.toMonacoHighlights([{ range: R(0, 0, 0, 1), kind: 3 }, { range: R(0, 0, 0, 1) }]).map((h) => h.kind), [2, 0]);
+  assert.deepEqual(
+    C.toMonacoHighlights([{ range: R(0, 0, 0, 1), kind: 3 }, { range: R(0, 0, 0, 1) }]).map((h) => h.kind),
+    [2, 0],
+  );
 
-  const folds = C.toMonacoFoldingRanges(m, [{ startLine: 2, endLine: 5, kind: 'comment' }, { startLine: 7, endLine: 7 }]);
+  const folds = C.toMonacoFoldingRanges(m, [
+    { startLine: 2, endLine: 5, kind: 'comment' },
+    { startLine: 7, endLine: 7 },
+  ]);
   assert.equal(folds.length, 1);
   assert.equal(folds[0].start, 3);
   assert.equal(folds[0].end, 6);
@@ -212,19 +286,31 @@ test('locations, symbols, highlights, folding, hover, signature help, semantic t
   assert.deepEqual(C.hoverContents([{ language: 'c', value: 'int x' }]), [{ value: '```c\nint x\n```' }]);
   assert.deepEqual(C.hoverContents({ kind: 'plaintext', value: 'a*b' }), [{ value: 'a\\*b' }]);
 
-  const sh = C.toMonacoSignatureHelp({ signatures: [{ label: 'int f(int a)', parameters: [{ label: [6, 11] }] }], activeParameter: 0 });
+  const sh = C.toMonacoSignatureHelp({
+    signatures: [{ label: 'int f(int a)', parameters: [{ label: [6, 11] }] }],
+    activeParameter: 0,
+  });
   assert.equal(sh.activeSignature, 0);
   assert.deepEqual(sh.signatures[0].parameters[0].label, [6, 11]);
 
-  const full = C.toMonacoSemanticTokens({ resultId: '1', data: [0, 4, 4, 12, 3] }) as { data: Uint32Array; resultId: string };
+  const full = C.toMonacoSemanticTokens({ resultId: '1', data: [0, 4, 4, 12, 3] }) as {
+    data: Uint32Array;
+    resultId: string;
+  };
   assert.ok(full.data instanceof Uint32Array);
   assert.equal(full.resultId, '1');
-  const delta = C.toMonacoSemanticTokens({ resultId: '2', edits: [{ start: 0, deleteCount: 5, data: [1, 2, 3, 4, 5] }] }) as {
+  const delta = C.toMonacoSemanticTokens({
+    resultId: '2',
+    edits: [{ start: 0, deleteCount: 5, data: [1, 2, 3, 4, 5] }],
+  }) as {
     edits: Array<{ data?: Uint32Array }>;
   };
   assert.ok(delta.edits[0].data instanceof Uint32Array);
 
-  const hint = C.toMonacoInlayHint({ position: { line: 3, character: 9 }, label: 'format:', kind: 2, paddingRight: true }, mapUri);
+  const hint = C.toMonacoInlayHint(
+    { position: { line: 3, character: 9 }, label: 'format:', kind: 2, paddingRight: true },
+    mapUri,
+  );
   assert.deepEqual(hint.position, { lineNumber: 4, column: 10 });
   assert.equal(hint.kind, 2);
 });

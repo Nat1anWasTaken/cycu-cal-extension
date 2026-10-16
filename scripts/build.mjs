@@ -31,7 +31,8 @@ function offlineModels() {
   const arg = process.argv.find((a) => a === '--offline' || a.startsWith('--offline='));
   if (!arg) return [];
   const id = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : OFFLINE_MODELS[0];
-  if (!(id in SLM_MODELS)) throw new Error(`--offline: unknown model "${id}" (expected one of ${Object.keys(SLM_MODELS).join(', ')})`);
+  if (!(id in SLM_MODELS))
+    throw new Error(`--offline: unknown model "${id}" (expected one of ${Object.keys(SLM_MODELS).join(', ')})`);
   return [id];
 }
 

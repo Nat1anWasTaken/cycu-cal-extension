@@ -42,7 +42,11 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
         return finish(
           await bridge.request<P.TextEdit[]>(
             'textDocument/rangeFormatting',
-            { textDocument: bridge.textDocument, range: toLspRange(range), options: opts(options) } satisfies P.DocumentRangeFormattingParams,
+            {
+              textDocument: bridge.textDocument,
+              range: toLspRange(range),
+              options: opts(options),
+            } satisfies P.DocumentRangeFormattingParams,
             token,
           ),
         );
@@ -55,7 +59,12 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
         return finish(
           await bridge.request<P.TextEdit[]>(
             'textDocument/onTypeFormatting',
-            { textDocument: bridge.textDocument, position: toLspPosition(position), ch, options: opts(options) } satisfies P.DocumentOnTypeFormattingParams,
+            {
+              textDocument: bridge.textDocument,
+              position: toLspPosition(position),
+              ch,
+              options: opts(options),
+            } satisfies P.DocumentOnTypeFormattingParams,
             token,
           ),
         );

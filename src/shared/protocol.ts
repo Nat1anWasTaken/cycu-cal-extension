@@ -40,10 +40,7 @@ export type PageToContent =
 
 /** ISOLATED → MAIN */
 export type ContentToPage =
-  | { type: 'hello' }
-  | { type: 'setValue'; value: string }
-  | { type: 'showAce'; show: boolean }
-  | { type: 'focusAce' };
+  { type: 'hello' } | { type: 'setValue'; value: string } | { type: 'showAce'; show: boolean } | { type: 'focusAce' };
 
 export interface BridgeEnvelope<T> {
   tag: typeof BRIDGE_TAG;
@@ -90,9 +87,7 @@ export interface LspHello {
 export type LspPortIn = LspHello | { type: 'rpc'; message: unknown };
 
 /** Port messages offscreen → content on LSP_PORT. */
-export type LspPortOut =
-  | { type: 'status'; status: ServerStatus; detail?: string }
-  | { type: 'rpc'; message: unknown };
+export type LspPortOut = { type: 'status'; status: ServerStatus; detail?: string } | { type: 'rpc'; message: unknown };
 
 export type ServerStatus = 'loading' | 'ready' | 'error' | 'stopped';
 

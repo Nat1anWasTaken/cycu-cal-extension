@@ -194,7 +194,8 @@ function start(a: any): void {
     window.addEventListener('message', (e) => {
       if (e.source !== window || e.origin !== location.origin) return;
       const env = e.data as BridgeEnvelope<ContentToPage> | undefined;
-      if (!env || env.tag !== BRIDGE_TAG || env.dir !== 'toPage' || !env.msg || typeof env.msg.type !== 'string') return;
+      if (!env || env.tag !== BRIDGE_TAG || env.dir !== 'toPage' || !env.msg || typeof env.msg.type !== 'string')
+        return;
       try {
         handle(env.msg);
       } catch (err) {

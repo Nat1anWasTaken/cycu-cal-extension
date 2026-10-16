@@ -118,7 +118,8 @@ export function hoverContents(c: P.Hover['contents']): Monaco.IMarkdownString[] 
   const list = Array.isArray(c) ? c : [c];
   const out: Monaco.IMarkdownString[] = [];
   for (const item of list) {
-    if (typeof item === 'string') out.push({ value: item }); // MarkedString strings are markdown
+    if (typeof item === 'string')
+      out.push({ value: item }); // MarkedString strings are markdown
     else if ('kind' in item) out.push({ value: item.kind === 'markdown' ? item.value : escapeMarkdown(item.value) });
     else out.push({ value: '```' + item.language + '\n' + item.value + '\n```' });
   }
@@ -135,9 +136,32 @@ function escapeMarkdown(s: string): string {
 
 /** LSP CompletionItemKind (1-based) -> Monaco enum member name. */
 const COMPLETION_KIND_NAMES = [
-  '', 'Text', 'Method', 'Function', 'Constructor', 'Field', 'Variable', 'Class', 'Interface', 'Module',
-  'Property', 'Unit', 'Value', 'Enum', 'Keyword', 'Snippet', 'Color', 'File', 'Reference', 'Folder',
-  'EnumMember', 'Constant', 'Struct', 'Event', 'Operator', 'TypeParameter',
+  '',
+  'Text',
+  'Method',
+  'Function',
+  'Constructor',
+  'Field',
+  'Variable',
+  'Class',
+  'Interface',
+  'Module',
+  'Property',
+  'Unit',
+  'Value',
+  'Enum',
+  'Keyword',
+  'Snippet',
+  'Color',
+  'File',
+  'Reference',
+  'Folder',
+  'EnumMember',
+  'Constant',
+  'Struct',
+  'Event',
+  'Operator',
+  'TypeParameter',
 ] as const;
 
 export function toMonacoCompletionKind(m: MonacoNS, kind: number | undefined): Monaco.languages.CompletionItemKind {
@@ -217,10 +241,14 @@ export function completionItems(result: P.CompletionItem[] | P.CompletionList | 
 
 export function toMarkerSeverity(m: MonacoNS, s: P.DiagnosticSeverity | undefined): Monaco.MarkerSeverity {
   switch (s) {
-    case 2: return m.MarkerSeverity.Warning;
-    case 3: return m.MarkerSeverity.Info;
-    case 4: return m.MarkerSeverity.Hint;
-    default: return m.MarkerSeverity.Error;
+    case 2:
+      return m.MarkerSeverity.Warning;
+    case 3:
+      return m.MarkerSeverity.Info;
+    case 4:
+      return m.MarkerSeverity.Hint;
+    default:
+      return m.MarkerSeverity.Error;
   }
 }
 
@@ -330,13 +358,11 @@ export function toMonacoWorkspaceEdit(
   versionId?: number,
 ): Monaco.languages.WorkspaceEdit {
   return {
-    edits: flattenWorkspaceEdit(we).edits.map(
-      ({ uri, edit }): Monaco.languages.IWorkspaceTextEdit => ({
-        resource: mapUri(uri),
-        textEdit: toMonacoTextEdit(edit),
-        versionId,
-      }),
-    ),
+    edits: flattenWorkspaceEdit(we).edits.map(({ uri, edit }): Monaco.languages.IWorkspaceTextEdit => ({
+      resource: mapUri(uri),
+      textEdit: toMonacoTextEdit(edit),
+      versionId,
+    })),
   };
 }
 
@@ -376,25 +402,37 @@ export function toMonacoSymbols(
   result: P.DocumentSymbol[] | P.SymbolInformation[] | null | undefined,
 ): Monaco.languages.DocumentSymbol[] {
   if (!result) return [];
-  return (result as Array<P.DocumentSymbol | P.SymbolInformation>).map(function conv(s): Monaco.languages.DocumentSymbol {
-    const tags = s.tags?.includes(1) || s.deprecated ? [1] : [];
-    if ('location' in s) {
-      const r = toMonacoRange(s.location.range);
-      return { name: s.name, detail: '', kind: s.kind - 1, tags, containerName: s.containerName, range: r, selectionRange: r };
-    }
-    return {
-      name: s.name,
-      detail: s.detail ?? '',
-      kind: s.kind - 1,
-      tags,
-      range: toMonacoRange(s.range),
-      selectionRange: toMonacoRange(s.selectionRange),
-      children: s.children?.map(conv),
-    };
-  });
+  return (result as Array<P.DocumentSymbol | P.SymbolInformation>).map(
+    function conv(s): Monaco.languages.DocumentSymbol {
+      const tags = s.tags?.includes(1) || s.deprecated ? [1] : [];
+      if ('location' in s) {
+        const r = toMonacoRange(s.location.range);
+        return {
+          name: s.name,
+          detail: '',
+          kind: s.kind - 1,
+          tags,
+          containerName: s.containerName,
+          range: r,
+          selectionRange: r,
+        };
+      }
+      return {
+        name: s.name,
+        detail: s.detail ?? '',
+        kind: s.kind - 1,
+        tags,
+        range: toMonacoRange(s.range),
+        selectionRange: toMonacoRange(s.selectionRange),
+        children: s.children?.map(conv),
+      };
+    },
+  );
 }
 
-export function toMonacoHighlights(result: P.DocumentHighlight[] | null | undefined): Monaco.languages.DocumentHighlight[] {
+export function toMonacoHighlights(
+  result: P.DocumentHighlight[] | null | undefined,
+): Monaco.languages.DocumentHighlight[] {
   return (result ?? []).map((h) => ({ range: toMonacoRange(h.range), kind: (h.kind ?? 1) - 1 }));
 }
 
@@ -451,7 +489,11 @@ export function toMonacoSemanticTokens(
   if ('edits' in r) {
     return {
       resultId: r.resultId,
-      edits: r.edits.map((e) => ({ start: e.start, deleteCount: e.deleteCount, data: e.data && new Uint32Array(e.data) })),
+      edits: r.edits.map((e) => ({
+        start: e.start,
+        deleteCount: e.deleteCount,
+        data: e.data && new Uint32Array(e.data),
+      })),
     };
   }
   return { resultId: r.resultId, data: new Uint32Array(r.data) };

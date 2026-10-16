@@ -1,14 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  buildFimPrompt,
-  CHARS_PER_TOKEN,
-  FIM_MIDDLE,
-  FIM_PREFIX,
-  FIM_SUFFIX,
-  sanitize,
-  trimContext,
-} from '../fim.ts';
+import { buildFimPrompt, CHARS_PER_TOKEN, FIM_MIDDLE, FIM_PREFIX, FIM_SUFFIX, sanitize, trimContext } from '../fim.ts';
 
 test('builds the Qwen2.5-Coder FIM prompt from prefix and suffix only', () => {
   const p = buildFimPrompt('int main() {\n\t', '\n}\n');

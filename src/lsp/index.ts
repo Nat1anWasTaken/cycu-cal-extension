@@ -126,14 +126,32 @@ export function semanticTokenRules(theme: 'light' | 'dark'): Monaco.editor.IToke
   const c =
     theme === 'dark'
       ? {
-          macro: 'BD63C5', function: 'DCDCAA', method: 'DCDCAA', variable: '9CDCFE', parameter: '9CDCFE',
-          property: '9CDCFE', type: '4EC9B0', enumMember: '4FC1FF', namespace: '4EC9B0', label: 'C8C8C8',
-          constant: '4FC1FF', globalVar: 'B5CEA8',
+          macro: 'BD63C5',
+          function: 'DCDCAA',
+          method: 'DCDCAA',
+          variable: '9CDCFE',
+          parameter: '9CDCFE',
+          property: '9CDCFE',
+          type: '4EC9B0',
+          enumMember: '4FC1FF',
+          namespace: '4EC9B0',
+          label: 'C8C8C8',
+          constant: '4FC1FF',
+          globalVar: 'B5CEA8',
         }
       : {
-          macro: '8A1BB0', function: '795E26', method: '795E26', variable: '001080', parameter: '7F4F00',
-          property: '0451A5', type: '267F99', enumMember: '0070C1', namespace: '267F99', label: '5E5E5E',
-          constant: '0070C1', globalVar: '1F5F8B',
+          macro: '8A1BB0',
+          function: '795E26',
+          method: '795E26',
+          variable: '001080',
+          parameter: '7F4F00',
+          property: '0451A5',
+          type: '267F99',
+          enumMember: '0070C1',
+          namespace: '267F99',
+          label: '5E5E5E',
+          constant: '0070C1',
+          globalVar: '1F5F8B',
         };
   return [
     { token: 'macro', foreground: c.macro },

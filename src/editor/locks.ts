@@ -83,7 +83,9 @@ export function installLockGuard(
   const redecorate = () => {
     decorations.set(
       locks.map((l) => ({
-        range: model.validateRange(new monaco.Range(l.start.row + 1, l.start.column + 1, l.end.row + 1, l.end.column + 1)),
+        range: model.validateRange(
+          new monaco.Range(l.start.row + 1, l.start.column + 1, l.end.row + 1, l.end.column + 1),
+        ),
         options: {
           isWholeLine: true,
           className: 'cal-locked-line',

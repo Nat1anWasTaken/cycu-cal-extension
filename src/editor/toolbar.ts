@@ -24,7 +24,11 @@ export interface ToolbarOptions {
   onFormat: () => void;
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, attrs: Record<string, string> = {}): HTMLElementTagNameMap[K] {
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  cls: string,
+  attrs: Record<string, string> = {},
+): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
   e.className = cls;
   for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
@@ -82,7 +86,10 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
     type: 'button',
     title: 'Format code with clang-format (Shift+Alt+F)',
   });
-  format.append(icon('fa-solid fa-wand-magic-sparkles'), Object.assign(el('span', 'cal-ext-btn-text'), { textContent: 'Format' }));
+  format.append(
+    icon('fa-solid fa-wand-magic-sparkles'),
+    Object.assign(el('span', 'cal-ext-btn-text'), { textContent: 'Format' }),
+  );
   format.addEventListener('click', (e) => {
     e.preventDefault();
     opts.onFormat();
@@ -109,7 +116,9 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
     setMode(m) {
       useMonaco = m;
       toggleText.textContent = m ? 'Monaco' : 'Ace';
-      toggle.title = m ? 'Using Monaco editor — click to switch back to the site editor (Ace)' : 'Using the site editor (Ace) — click to switch to Monaco';
+      toggle.title = m
+        ? 'Using Monaco editor — click to switch back to the site editor (Ace)'
+        : 'Using the site editor (Ace) — click to switch to Monaco';
       toggle.setAttribute('aria-pressed', String(m));
       syncVisible();
     },
