@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "CYCU CAL 程式碼編輯器",
+  "name": "__MSG_extName__",
   "version": "0.1.0",
-  "description": "把 CYCU CAL 的程式碼編輯器換成更好用的版本：即時錯誤提示、自動完成、自動排版，以及可選的本機 AI 自動補全。",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "minimum_chrome_version": "116",
   "permissions": ["offscreen", "storage", "unlimitedStorage"],
   "host_permissions": ["https://huggingface.co/*", "https://*.hf.co/*", "https://*.huggingface.co/*"],

@@ -15,6 +15,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
+import { LOCALES } from '../src/shared/i18n.ts';
 import { bundledModelPath, modelSize, OFFLINE_MODELS, SLM_MODELS } from '../src/shared/protocol.ts';
 import { fetchVendor } from './fetch-vendor.mjs';
 
@@ -116,6 +117,18 @@ function copyStatic() {
   if (existsSync(join(root, 'icons'))) cpSync(join(root, 'icons'), join(dist, 'icons'), { recursive: true });
 }
 
+/** Writes dist/_locales/ for the manifest's __MSG_*__ strings, from the same tables the UI uses (src/shared/locales). */
+function writeLocales() {
+  for (const [locale, messages] of Object.entries(LOCALES)) {
+    const dir = join(dist, '_locales', locale.replace('-', '_'));
+    mkdirSync(dir, { recursive: true });
+    const json = {};
+    // `$` starts a placeholder in messages.json, so it must be escaped as `$$`.
+    for (const key of ['extName', 'extDescription']) json[key] = { message: messages[key].replaceAll('$', '$$$$') };
+    writeFileSync(join(dir, 'messages.json'), JSON.stringify(json, null, 2));
+  }
+}
+
 /** Writes dist/manifest.json, dropping references to files that were not built (missing slices). */
 function writeManifest() {
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
@@ -154,6 +167,7 @@ function packageZip() {
 await fetchVendor({ models: bundledModels });
 if (!watch) rmSync(dist, { recursive: true, force: true });
 copyStatic();
+writeLocales();
 
 const iifeEntries = [
   ['main-world', 'src/content/main-world.ts'],
