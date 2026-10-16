@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as C from '../features/convert.ts';
+import { setLocale } from '../../shared/i18n.ts';
 import { fakeMonaco as m, mapUri } from './fakes.ts';
 import type { LockRange } from '../../shared/protocol';
+
+// Rejection reasons are localized; assert against the English ones.
+setLocale('en');
 
 const R = (sl: number, sc: number, el: number, ec: number) => ({
   start: { line: sl, character: sc },
@@ -213,11 +217,11 @@ test('workspace edits: mapping and lock/other-file rejection', () => {
   assert.equal(C.workspaceEditRejection(we, doc, []), undefined);
   assert.match(
     C.workspaceEditRejection(we, doc, [{ start: { row: 7, column: 0 }, end: { row: 7, column: 20 } }])!,
-    /第 8 行/,
+    /locked line 8/,
   );
   assert.match(
     C.workspaceEditRejection(we, doc, [{ start: { row: 4, column: 0 }, end: { row: 5, column: 20 } }])!,
-    /第 5-6 行/,
+    /locked lines 5-6/,
   );
 
   const dc = {
@@ -230,10 +234,10 @@ test('workspace edits: mapping and lock/other-file rejection', () => {
     ],
   };
   assert.equal(C.flattenWorkspaceEdit(dc).edits.length, 2);
-  assert.match(C.workspaceEditRejection(dc, doc, [])!, /其他檔案/);
+  assert.match(C.workspaceEditRejection(dc, doc, [])!, /another file/);
   assert.match(
     C.workspaceEditRejection({ documentChanges: [{ kind: 'create', uri: 'file:///x.c' }] }, doc, [])!,
-    /刪除檔案/,
+    /files/,
   );
 });
 
