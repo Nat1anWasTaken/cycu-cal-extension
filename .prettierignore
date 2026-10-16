@@ -1,0 +1,6 @@
+dist
+dist-*
+release
+vendor
+pnpm-lock.yaml
+test/fixture
