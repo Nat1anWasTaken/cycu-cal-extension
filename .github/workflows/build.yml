@@ -39,6 +39,8 @@ jobs:
           path: vendor/models
           key: models-${{ hashFiles('src/shared/protocol.ts') }}
 
+      - run: pnpm format:check
+
       - run: pnpm typecheck
 
       - run: pnpm package
