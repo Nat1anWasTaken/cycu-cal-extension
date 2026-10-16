@@ -433,9 +433,9 @@ try {
     fix?.actions?.some((a) => /edits=[1-9]/.test(a)),
     JSON.stringify(fix),
   );
-  // Formatting: messy line → tabs; locked lines untouched.
+  // Formatting: messy line → 2-space indent; locked lines untouched.
   const fmt = await ev(`${PRE}
-    const edits = await exec('_executeFormatDocumentProvider', model.uri, { tabSize: 2, insertSpaces: false });
+    const edits = await exec('_executeFormatDocumentProvider', model.uri, { tabSize: 2, insertSpaces: true });
     return (edits ?? []).map(e => [e.range.startLineNumber, e.range.endLineNumber, JSON.stringify(e.text)]);`).catch(
     (e) => String(e),
   );
@@ -448,7 +448,7 @@ try {
     await ed.getAction('editor.action.formatDocument').run();
     await new Promise(r => setTimeout(r, 500));
     return model.getLinesContent().find(l => l.includes('printf('));`).catch((e) => String(e));
-  check('formatDocument indents printf line with a tab', /^\tprintf/.test(fmtLine), JSON.stringify(fmtLine));
+  check('formatDocument indents printf line with 2 spaces', /^  printf/.test(fmtLine), JSON.stringify(fmtLine));
 
   // --- reconnect: kill offscreen doc ------------------------------------------------------
   const off = (await targets()).find((t) => t.url.includes('offscreen'));

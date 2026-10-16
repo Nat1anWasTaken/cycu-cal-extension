@@ -276,7 +276,7 @@ try {
   const opts = await ext(
     `(() => { const e = __calExt.session.editor, O = __calExt.monaco.editor.EditorOption, m = __calExt.session.model.getOptions(); return { tab: m.tabSize, spaces: m.insertSpaces, dnd: e.getOption(O.dragAndDrop) }; })()`,
   );
-  check('tabSize 2, hard tabs, no drag&drop', opts.tab === 2 && !opts.spaces && !opts.dnd, JSON.stringify(opts));
+  check('tabSize 2, spaces, no drag&drop', opts.tab === 2 && opts.spaces && !opts.dnd, JSON.stringify(opts));
 
   // ---- 2. typing → Ace + draft --------------------------------------------
   await focusAt(5, 2);
