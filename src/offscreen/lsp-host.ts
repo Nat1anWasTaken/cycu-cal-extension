@@ -111,16 +111,16 @@ export class LspHost {
       if (this.worker === w) this.fromWorker(e.data);
     };
     w.onerror = (e) => {
-      if (this.worker === w) this.stopWorker('error', `clangd worker error: ${e.message || 'failed to load'}`);
+      if (this.worker === w) this.stopWorker('error', `程式分析工具發生錯誤：${e.message || '載入失敗'}`);
     };
     this.toWorker({ type: 'start', compileFlags: flags });
-    this.setStatus('loading', 'loading clangd');
+    this.setStatus('loading', '正在載入 clangd');
   }
 
   private stopWorker(status: ServerStatus, detail?: string) {
     this.worker?.terminate();
     this.worker = null;
-    const err = { code: -32099, message: detail ?? 'clangd stopped' };
+    const err = { code: -32099, message: detail ?? 'clangd 已停止' };
     for (const p of this.pending.values()) if (p.kind === 'client') this.reply(p.client, p.id, undefined, err);
     if (this.init.state === 'pending') for (const w of this.init.waiters) this.reply(w.client, w.id, undefined, err);
     for (const r of this.readFiles.values()) this.reply(r.client, r.id, { text: null } satisfies ReadFileResult);
@@ -161,7 +161,7 @@ export class LspHost {
     if (this.clients.size === 0 && this.worker) {
       clearTimeout(this.idleTimer);
       this.idleTimer = setTimeout(() => {
-        if (this.clients.size === 0) this.stopWorker('stopped', 'idle');
+        if (this.clients.size === 0) this.stopWorker('stopped', '閒置中，已暫停');
       }, IDLE_MS);
     }
   }
@@ -260,7 +260,7 @@ export class LspHost {
         break;
       case 'started':
         console.info(`[cal] clangd ready in ${Math.round(performance.now() - this.startedAt)} ms`);
-        this.setStatus('ready', `started in ${(m.ms / 1000).toFixed(1)} s`);
+        this.setStatus('ready', `已在 ${(m.ms / 1000).toFixed(1)} 秒內啟動`);
         break;
       case 'lsp':
         this.fromServer(m.message as RpcMessage);
@@ -273,7 +273,7 @@ export class LspHost {
         break;
       }
       case 'exit':
-        this.stopWorker(m.code === 0 ? 'stopped' : 'error', `clangd exited with code ${m.code}`);
+        this.stopWorker(m.code === 0 ? 'stopped' : 'error', `clangd 已結束（代碼 ${m.code}）`);
         break;
       case 'error':
         console.error('[cal]', m.error);

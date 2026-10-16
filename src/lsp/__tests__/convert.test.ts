@@ -213,11 +213,11 @@ test('workspace edits: mapping and lock/other-file rejection', () => {
   assert.equal(C.workspaceEditRejection(we, doc, []), undefined);
   assert.match(
     C.workspaceEditRejection(we, doc, [{ start: { row: 7, column: 0 }, end: { row: 7, column: 20 } }])!,
-    /locked line 8/,
+    /第 8 行/,
   );
   assert.match(
     C.workspaceEditRejection(we, doc, [{ start: { row: 4, column: 0 }, end: { row: 5, column: 20 } }])!,
-    /locked lines 5-6/,
+    /第 5-6 行/,
   );
 
   const dc = {
@@ -230,10 +230,10 @@ test('workspace edits: mapping and lock/other-file rejection', () => {
     ],
   };
   assert.equal(C.flattenWorkspaceEdit(dc).edits.length, 2);
-  assert.match(C.workspaceEditRejection(dc, doc, [])!, /another file/);
+  assert.match(C.workspaceEditRejection(dc, doc, [])!, /其他檔案/);
   assert.match(
     C.workspaceEditRejection({ documentChanges: [{ kind: 'create', uri: 'file:///x.c' }] }, doc, [])!,
-    /files/,
+    /刪除檔案/,
   );
 });
 

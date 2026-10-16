@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "CYCU CAL Code Editor",
+  "name": "CYCU CAL 程式碼編輯器",
   "version": "0.1.0",
-  "description": "Replaces the CYCU CAL editor with Monaco + clangd (WASM) language features and optional local completion.",
+  "description": "把 CYCU CAL 的程式碼編輯器換成更好用的版本：即時錯誤提示、自動完成、自動排版，以及可選的本機 AI 自動補全。",
   "minimum_chrome_version": "116",
   "permissions": ["offscreen", "storage", "unlimitedStorage"],
   "host_permissions": ["https://huggingface.co/*", "https://*.hf.co/*", "https://*.huggingface.co/*"],

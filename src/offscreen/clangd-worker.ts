@@ -127,13 +127,13 @@ self.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
           lastPct = pct;
           post({
             type: 'progress',
-            detail: total ? `loading clangd ${pct}%` : `loading clangd ${(loaded / 1e6) | 0} MB`,
+            detail: total ? `正在載入 clangd ${pct}%` : `正在載入 clangd ${(loaded / 1e6) | 0} MB`,
           });
         }
         ctl.enqueue(chunk);
       },
       flush() {
-        post({ type: 'progress', detail: 'compiling clangd' });
+        post({ type: 'progress', detail: '正在準備 clangd' });
       },
     }),
   );
@@ -180,7 +180,7 @@ function readFile(path: string): string | null {
 async function start(compileFlags: string[]) {
   const t0 = performance.now();
   try {
-    post({ type: 'progress', detail: 'loading clangd' });
+    post({ type: 'progress', detail: '正在載入 clangd' });
     const { default: Module } = (await import(/* @vite-ignore */ CLANGD_JS)) as {
       default: (opts: Record<string, unknown>) => Promise<ClangdModule>;
     };
@@ -196,7 +196,7 @@ async function start(compileFlags: string[]) {
     });
     inst = m;
     writeConfig(m.FS, compileFlags);
-    post({ type: 'progress', detail: 'starting clangd' });
+    post({ type: 'progress', detail: '正在啟動 clangd' });
     // With Asyncify, callMain returns once main() first suspends waiting for stdin.
     m.callMain(MAIN_ARGS);
     post({ type: 'started', ms: Math.round(performance.now() - t0) });

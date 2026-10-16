@@ -339,14 +339,14 @@ export function workspaceEditRejection(
   locks: readonly LockRange[],
 ): string | undefined {
   const { edits, fileOps } = flattenWorkspaceEdit(we);
-  if (fileOps) return 'This change would create, rename or delete files.';
+  if (fileOps) return '這項修改會新增、重新命名或刪除檔案，因此無法套用。';
   for (const { uri, edit } of edits) {
-    if (uri !== docUri) return `This change would modify another file (${uri.replace(/^file:\/\//, '')}).`;
+    if (uri !== docUri) return `這項修改會改動其他檔案（${uri.replace(/^file:\/\//, '')}），因此無法套用。`;
     const lock = rangeTouchesLocks(edit.range, locks);
     if (lock) {
       const a = lock.start.row + 1;
       const b = lock.end.row + 1;
-      return `This change would modify locked line${a === b ? ` ${a}` : `s ${a}-${b}`}.`;
+      return `這項修改會改動不可編輯的第 ${a === b ? a : `${a}-${b}`} 行，因此無法套用。`;
     }
   }
   return undefined;

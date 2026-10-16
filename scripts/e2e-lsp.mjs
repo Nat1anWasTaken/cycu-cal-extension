@@ -188,7 +188,7 @@ try {
     const M = __calExt.monaco; const ed = M.editor.getEditors()[0]; const model = ed.getModel();
     const cs = ed._commandService; const exec = (id, ...a) => cs.executeCommand(id, ...a);
     const P = (l, c) => new M.Position(l, c);
-    const pill = () => [...document.querySelectorAll('.coding-toolbar *')].map(e => e.textContent).find(t => /clangd/i.test(t || ''));
+    const pill = () => [...document.querySelectorAll('.coding-toolbar *')].map(e => e.textContent).find(t => /程式分析/.test(t || ''));
   `;
   const t0 = Date.now();
   // Write a program below the locked lines (1-3).
@@ -234,7 +234,7 @@ try {
   }
   check(
     'status pill shows ready',
-    /ready/i.test((await ev(`${PRE} return pill() || ''`)) ?? ''),
+    /就緒/.test((await ev(`${PRE} return pill() || ''`)) ?? ''),
     await ev(`${PRE} return pill() || ''`),
   );
 
@@ -561,7 +561,7 @@ try {
   );
   check(
     'options: toggles autosave',
-    saved.status === 'Saved' && saved.s.diagnostics === false && saved.s.hover === false,
+    saved.status === '已儲存' && saved.s.diagnostics === false && saved.s.hover === false,
     JSON.stringify(saved),
   );
   const live = await ev(`${PRE}

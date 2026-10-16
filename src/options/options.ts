@@ -28,19 +28,19 @@ const compileFlags = $<HTMLTextAreaElement>('compileFlags');
 const statusEl = $<HTMLDivElement>('status');
 
 const FEATURE_HINTS: Record<FeatureId, string> = {
-  diagnostics: 'Errors and warnings as you type',
-  completion: 'Suggestions for names and members',
-  hover: 'Types and docs under the cursor',
-  signatureHelp: 'Parameter hints inside calls',
-  formatting: 'Format the document or a selection',
-  definition: 'Jump to declarations and usages',
-  highlightRename: 'Highlight and rename symbols',
-  outline: 'Quick outline (Ctrl/Cmd-Shift-O)',
-  folding: 'Collapse blocks and comments',
-  inlayHints: 'Inline parameter names and types',
-  semanticTokens: 'Color by meaning, not just syntax',
-  documentLinks: 'Ctrl/Cmd-click to peek at a header',
-  inlineCompletion: 'Gray ghost-text suggestions; press Tab to accept',
+  diagnostics: '邊打字邊標出錯誤和警告，並提供一鍵修正',
+  completion: '打字時跳出變數、函式名稱等建議',
+  hover: '滑鼠移到程式碼上，顯示它的型別和說明',
+  signatureHelp: '呼叫函式時，提示該填哪些參數',
+  formatting: '自動整理整份或選取部分程式碼的縮排與空白',
+  definition: '跳到變數或函式定義的位置，或找出所有用到它的地方',
+  highlightRename: '標示同一個名稱出現的所有位置，並可一次全部改名',
+  outline: '快速列出所有函式和變數（Ctrl/Cmd+Shift+O）',
+  folding: '把程式區塊或註解收合起來，讓畫面更清爽',
+  inlayHints: '在程式碼中直接顯示參數名稱和型別',
+  semanticTokens: '依照用途（變數、函式、型別等）為程式碼上色',
+  documentLinks: '按住 Ctrl/Cmd 點擊 #include，查看標頭檔內容',
+  inlineCompletion: '以灰色文字預先顯示 AI 建議的程式碼，按 Tab 接受',
 };
 
 const featureIds = Object.keys(FEATURE_LABELS) as FeatureId[];
@@ -57,8 +57,8 @@ function confirmDownload(id: SlmModelId): boolean {
   if (isBundled(id)) return true;
   const m = SLM_MODELS[id];
   return confirm(
-    `Local AI completion downloads ${m.label} (about ${sizeText(id)}) from Hugging Face (${m.repo}).\n\n` +
-      'It is cached in this browser and runs on your CPU. Continue?',
+    `本機 AI 自動補全需要從 Hugging Face（${m.repo}）下載 ${m.label}，大小約 ${sizeText(id)}。\n\n` +
+      '下載後會存在這個瀏覽器中，並在你的電腦上執行。要繼續嗎？',
   );
 }
 
@@ -118,9 +118,9 @@ function read(): Partial<Settings> {
 async function save(): Promise<void> {
   try {
     render(await saveSettings(read()));
-    setStatus('Saved');
+    setStatus('已儲存');
   } catch (err) {
-    setStatus(`Save failed: ${err instanceof Error ? err.message : String(err)}`, true);
+    setStatus(`儲存失敗：${err instanceof Error ? err.message : String(err)}`, true);
   }
 }
 
@@ -155,8 +155,8 @@ for (const id of modelIds) {
   const title = el('span', 'name', name);
   if (quant) title.append(el('span', 'quant', quant));
   const badge = isBundled(id)
-    ? el('span', 'badge included', `Included · ${sizeText(id)}`)
-    : el('span', 'badge', `${sizeText(id)} download`);
+    ? el('span', 'badge included', `已內建 · ${sizeText(id)}`)
+    : el('span', 'badge', `需下載 ${sizeText(id)}`);
   row.append(radio, title, badge);
   slmModel.append(row);
   radios.set(id, radio);
@@ -210,4 +210,4 @@ loadSettings()
     render(s);
     lastModel = s.slmModel;
   })
-  .catch((err) => setStatus(`Could not load settings: ${err}`, true));
+  .catch((err) => setStatus(`無法載入設定：${err}`, true));

@@ -19,19 +19,19 @@ export type FeatureId =
   | 'inlineCompletion';
 
 export const FEATURE_LABELS: Record<FeatureId, string> = {
-  diagnostics: 'Diagnostics & quick fixes',
-  completion: 'Code completion',
-  hover: 'Hover information',
-  signatureHelp: 'Signature help',
-  formatting: 'Formatting (clang-format)',
-  definition: 'Go to definition / references',
-  highlightRename: 'Symbol highlight & rename',
-  outline: 'Document outline',
-  folding: 'Folding ranges',
-  inlayHints: 'Inlay hints',
-  semanticTokens: 'Semantic highlighting',
-  documentLinks: '#include links',
-  inlineCompletion: 'Local AI ghost-text completion',
+  diagnostics: '錯誤檢查與快速修正',
+  completion: '自動完成',
+  hover: '滑鼠停留說明',
+  signatureHelp: '函式參數提示',
+  formatting: '自動排版（clang-format）',
+  definition: '跳到定義／尋找使用處',
+  highlightRename: '標示與重新命名',
+  outline: '程式大綱',
+  folding: '收合程式區塊',
+  inlayHints: '行內提示',
+  semanticTokens: '進階語法上色',
+  documentLinks: '#include 連結',
+  inlineCompletion: '本機 AI 自動補全',
 };
 
 export interface Settings {

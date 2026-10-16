@@ -88,7 +88,7 @@ export function attachSlmPort(port: chrome.runtime.Port): void {
             msg.modelId,
             SLM_CONTEXT_SIZES.includes(msg.contextTokens) ? msg.contextTokens : SLM_CONTEXT_SIZES[0],
           );
-        } else post(port, { type: 'status', status: 'error', detail: `unknown model ${msg.modelId}` });
+        } else post(port, { type: 'status', status: 'error', detail: `未知的模型：${msg.modelId}` });
         break;
       case 'complete':
         complete(port, msg);
@@ -174,7 +174,7 @@ async function switchTo(id: SlmModelId, ctx: SlmContextTokens): Promise<void> {
     if (isBundled(id)) {
       setStatus({ status: 'loading' });
       const res = await fetch(chrome.runtime.getURL(bundledModelPath(id)), { signal: ac.signal });
-      if (!res.ok) throw new Error(`bundled model missing (HTTP ${res.status})`);
+      if (!res.ok) throw new Error(`找不到內建的模型檔案（HTTP ${res.status}）`);
       await w.loadModel([await res.blob()], { n_ctx: ctx + CTX_HEADROOM });
     } else {
       await download(w, id, ctx + CTX_HEADROOM, ac.signal);
@@ -188,7 +188,7 @@ async function switchTo(id: SlmModelId, ctx: SlmContextTokens): Promise<void> {
     loadedCtx = ctx;
     setStatus({
       status: 'ready',
-      detail: `${SLM_MODELS[id].label}, ${w.isMultithread() ? w.getNumThreads() : 1} threads`,
+      detail: `${SLM_MODELS[id].label}，使用 ${w.isMultithread() ? w.getNumThreads() : 1} 個執行緒`,
     });
   } catch (e) {
     await w.exit().catch(() => {});

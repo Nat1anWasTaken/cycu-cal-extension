@@ -184,7 +184,7 @@ export function startInlineCompletion(opts: InlineCompletionOptions): InlineComp
 
   function registerProvider(): Monaco.IDisposable {
     return monaco.languages.registerInlineCompletionsProvider('c', {
-      displayName: 'Local SLM',
+      displayName: '本機 AI',
       debounceDelayMs: DEBOUNCE_MS,
       async provideInlineCompletions(m, position, _context, token) {
         if (m !== model || !enabled() || status !== 'ready' || !port) return undefined;

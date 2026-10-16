@@ -40,25 +40,25 @@ function icon(cls: string): HTMLElement {
 }
 
 const CLANGD_LABEL: Record<ServerStatus | 'starting', string> = {
-  starting: 'clangd: starting…',
-  loading: 'clangd: loading…',
-  ready: 'clangd: ready',
-  error: 'clangd: error',
-  stopped: 'clangd: stopped',
+  starting: '程式分析：啟動中…',
+  loading: '程式分析：載入中…',
+  ready: '程式分析：就緒',
+  error: '程式分析：發生錯誤',
+  stopped: '程式分析：已停止',
 };
 
 const SLM_LABEL: Record<SlmStatus, string> = {
-  idle: 'AI: idle',
-  downloading: 'AI: downloading',
-  loading: 'AI: loading…',
-  ready: 'AI: ready',
-  error: 'AI: error',
+  idle: 'AI：待命',
+  downloading: 'AI：下載中',
+  loading: 'AI：載入中…',
+  ready: 'AI：就緒',
+  error: 'AI：發生錯誤',
 };
 
 export function createToolbar(opts: ToolbarOptions): Toolbar {
-  const root = el('div', 'cal-ext-toolbar', { role: 'group', 'aria-label': 'CYCU CAL extension' });
+  const root = el('div', 'cal-ext-toolbar', { role: 'group', 'aria-label': 'CYCU CAL 擴充功能' });
 
-  const toggle = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn', { type: 'button' });
+  const toggle = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn cal-ext-toggle', { type: 'button' });
   const toggleIcon = icon('fa-solid fa-code');
   const toggleText = el('span', 'cal-ext-btn-text');
   toggle.append(toggleIcon, toggleText);
@@ -70,8 +70,8 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
 
   const gear = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn', {
     type: 'button',
-    title: 'Extension settings',
-    'aria-label': 'Extension settings',
+    title: '擴充功能設定',
+    'aria-label': '擴充功能設定',
   });
   gear.append(icon('fa-solid fa-gear'));
   gear.addEventListener('click', (e) => {
@@ -84,11 +84,11 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
 
   const format = el('button', 'btn btn-sm btn-outline-secondary cal-ext-btn', {
     type: 'button',
-    title: 'Format code with clang-format (Shift+Alt+F)',
+    title: '自動整理程式碼的縮排與空白（Shift+Alt+F）',
   });
   format.append(
     icon('fa-solid fa-wand-magic-sparkles'),
-    Object.assign(el('span', 'cal-ext-btn-text'), { textContent: 'Format' }),
+    Object.assign(el('span', 'cal-ext-btn-text'), { textContent: '排版' }),
   );
   format.addEventListener('click', (e) => {
     e.preventDefault();
@@ -115,16 +115,16 @@ export function createToolbar(opts: ToolbarOptions): Toolbar {
   const api: Toolbar = {
     setMode(m) {
       useMonaco = m;
-      toggleText.textContent = m ? 'Monaco' : 'Ace';
+      toggleText.textContent = m ? '新版編輯器' : '原版編輯器';
       toggle.title = m
-        ? 'Using Monaco editor — click to switch back to the site editor (Ace)'
-        : 'Using the site editor (Ace) — click to switch to Monaco';
+        ? '目前使用新版編輯器（Monaco）— 點擊切換回網站原本的編輯器（Ace）'
+        : '目前使用網站原本的編輯器（Ace）— 點擊切換到新版編輯器（Monaco）';
       toggle.setAttribute('aria-pressed', String(m));
       syncVisible();
     },
     setClangd(status, detail) {
       clangd.dataset.state = status;
-      clangd.textContent = CLANGD_LABEL[status] ?? `clangd: ${status}`;
+      clangd.textContent = CLANGD_LABEL[status] ?? `程式分析：${status}`;
       clangd.title = detail ?? '';
     },
     setSlm(status, progress, detail) {

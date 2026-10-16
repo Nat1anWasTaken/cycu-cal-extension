@@ -474,15 +474,15 @@ try {
 
   // ---- 9. Ace toggle --------------------------------------------------------------
   await shot('/tmp/cal-page-monaco.png');
-  await click('.cal-ext-toolbar .cal-ext-btn');
+  await click('.cal-ext-toolbar .cal-ext-toggle');
   await sleep(300);
   const tog = await page(
-    `(() => ({ host: document.querySelector('.cal-monaco-host').hidden, vis: getComputedStyle(document.getElementById('editor')).visibility, label: document.querySelector('.cal-ext-toolbar .cal-ext-btn').textContent.trim() }))()`,
+    `(() => ({ host: document.querySelector('.cal-monaco-host').hidden, vis: getComputedStyle(document.getElementById('editor')).visibility, label: document.querySelector('.cal-ext-toolbar .cal-ext-toggle').textContent.trim() }))()`,
   );
   const stored = await ext(`chrome.storage.sync.get('settings').then((r) => r.settings?.useMonaco)`);
   check(
     'toggle → Ace visible, Monaco hidden',
-    tog.host && tog.vis === 'visible' && tog.label === 'Ace',
+    tog.host && tog.vis === 'visible' && tog.label === '原版編輯器',
     JSON.stringify(tog),
   );
   check('toggle persists settings.useMonaco=false', stored === false);
@@ -494,7 +494,7 @@ try {
     (await model()) === (await ace()) && (await model()).includes('/*ace*/'),
   );
   await shot('/tmp/cal-page-ace.png');
-  await click('.cal-ext-toolbar .cal-ext-btn');
+  await click('.cal-ext-toolbar .cal-ext-toggle');
   await sleep(300);
   const back = await page(
     `(() => ({ host: document.querySelector('.cal-monaco-host').hidden, vis: getComputedStyle(document.getElementById('editor')).visibility }))()`,

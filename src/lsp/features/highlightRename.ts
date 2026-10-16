@@ -55,13 +55,13 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
           return {
             range: { startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 },
             text: '',
-            rejectReason: "This symbol can't be renamed.",
+            rejectReason: '這個名稱無法重新命名。',
           };
         }
         const lspRange = 'range' in r ? r.range : r;
         const range = toMonacoRange(lspRange);
         if (rangeTouchesLocks(lspRange, ctx.getLocks())) {
-          return { range, text: '', rejectReason: 'This symbol is on a locked line and cannot be renamed.' };
+          return { range, text: '', rejectReason: '這個名稱位於不可編輯的行，無法重新命名。' };
         }
         return { range, text: 'placeholder' in r ? r.placeholder : model.getValueInRange(range) };
       },
@@ -72,9 +72,9 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
           { ...pos(model, position), newName } satisfies P.RenameParams,
           token,
         );
-        if (!we) return { edits: [], rejectReason: 'Rename failed.' };
+        if (!we) return { edits: [], rejectReason: '重新命名失敗。' };
         const reason = workspaceEditRejection(we, bridge.uri, ctx.getLocks());
-        if (reason) return { edits: [], rejectReason: `Rename rejected: ${reason}` };
+        if (reason) return { edits: [], rejectReason: `無法重新命名：${reason}` };
         return toMonacoWorkspaceEdit(we, bridge.toModelUri, model.getVersionId());
       },
     }),

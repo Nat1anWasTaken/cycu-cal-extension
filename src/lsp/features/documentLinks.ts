@@ -33,8 +33,7 @@ export function register(ctx: FeatureContext): Monaco.IDisposable {
       range,
       url: l.target ? monaco.Uri.parse(linkCommandUri(l.target, range.startLineNumber, range.startColumn)) : undefined,
       tooltip:
-        l.tooltip ??
-        (l.target ? `Peek ${decodeURIComponent(l.target.replace(/^file:\/\//, ''))} (read-only)` : undefined),
+        l.tooltip ?? (l.target ? `查看 ${decodeURIComponent(l.target.replace(/^file:\/\//, ''))}（唯讀）` : undefined),
     };
     origin.set(link, l);
     return link;
