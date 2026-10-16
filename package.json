@@ -10,6 +10,7 @@
     "package": "node scripts/build.mjs --zip",
     "package:offline-0.5b": "node scripts/build.mjs --zip --offline=qwen2.5-coder-0.5b",
     "package:offline-1.5b": "node scripts/build.mjs --zip --offline=qwen2.5-coder-1.5b",
+    "package:all": "pnpm package && pnpm package:offline-0.5b && pnpm package:offline-1.5b",
     "fetch-vendor": "node scripts/fetch-vendor.mjs",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",

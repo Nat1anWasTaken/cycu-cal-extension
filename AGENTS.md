@@ -15,6 +15,7 @@ pnpm dev            # build to dist/ and rebuild on change (load dist/ as an unp
 pnpm build          # build to dist/ (first run downloads clangd into vendor/, ~127 MB)
 pnpm package        # build + zip to release/
 pnpm package:offline-0.5b / package:offline-1.5b   # zip with model weights bundled
+pnpm package:all    # all three zips above
 pnpm typecheck      # tsc --noEmit
 pnpm format         # prettier --write (format:check runs in CI)
 pnpm test           # node --test src/**/__tests__/*.test.ts
