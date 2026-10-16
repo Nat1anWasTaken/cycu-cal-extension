@@ -162,6 +162,7 @@ const brave = spawn(
   BRAVE,
   [
     '--headless=new',
+    '--lang=en-US', // the UI strings checked below are English
     `--user-data-dir=${profile}`,
     `--remote-debugging-port=${port}`,
     `--load-extension=${OUT_DIR}`,
@@ -482,7 +483,7 @@ try {
   const stored = await ext(`chrome.storage.sync.get('settings').then((r) => r.settings?.useMonaco)`);
   check(
     'toggle → Ace visible, Monaco hidden',
-    tog.host && tog.vis === 'visible' && tog.label === '原版編輯器',
+    tog.host && tog.vis === 'visible' && tog.label === 'Ace',
     JSON.stringify(tog),
   );
   check('toggle persists settings.useMonaco=false', stored === false);
