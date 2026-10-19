@@ -30,6 +30,12 @@ export const zhTW: Messages = {
   'slm.ready': 'AI：就緒',
   'slm.error': 'AI：發生錯誤',
 
+  // Question "Copy" button
+  'question.copy': '複製',
+  'question.copied': '已複製',
+  'question.copyFailed': '複製失敗',
+  'question.copyTitle': '以 Markdown 格式複製題目',
+
   // clangd status details (offscreen document and worker)
   'clangd.detail.loadingPct': (pct) => `正在載入 clangd ${pct}%`,
   'clangd.detail.loadingMB': (mb) => `正在載入 clangd ${mb} MB`,
@@ -108,7 +114,7 @@ export const zhTW: Messages = {
   'options.fontFamily': '字型',
   'options.fontFamilyDesc': '想使用的字型名稱，可用逗號分隔多個，例如 {example}。留空則使用網站預設字型。',
   'options.fontFamilyPlaceholder': '網站預設字型',
-  'options.toolbar': '工具列',
+  'options.toolbar': '頁面按鈕',
   'options.clangdBadge': '程式分析狀態',
   'options.clangdBadgeDesc': '顯示負責檢查程式碼的工具（clangd）目前是啟動中、已就緒，還是發生錯誤。',
   'options.slmBadge': 'AI 狀態',
@@ -116,6 +122,8 @@ export const zhTW: Messages = {
   'options.formatButton': '「排版」按鈕',
   'options.formatButtonDesc':
     '一鍵把程式碼的縮排和空白整理整齊（也可以按 Shift+Alt+F）。需要開啟下方的「自動排版」功能。',
+  'options.copyButton': '「複製」按鈕',
+  'options.copyButtonDesc': '在題目右上角顯示按鈕，一鍵把題目以 Markdown 格式複製下來。',
   'options.features': '寫程式輔助功能',
   'options.featuresHint':
     '這些功能由 clangd 提供，它是一個 C 語言分析工具，完全在你的瀏覽器裡執行。修改後會立即套用到已開啟的編輯器。',

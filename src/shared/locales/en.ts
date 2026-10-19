@@ -28,6 +28,12 @@ export const en = {
   'slm.ready': 'AI: ready',
   'slm.error': 'AI: error',
 
+  // Question "Copy" button
+  'question.copy': 'Copy',
+  'question.copied': 'Copied',
+  'question.copyFailed': 'Copy failed',
+  'question.copyTitle': 'Copy the question as Markdown',
+
   // clangd status details (offscreen document and worker)
   'clangd.detail.loadingPct': (pct: number) => `loading clangd ${pct}%`,
   'clangd.detail.loadingMB': (mb: number) => `loading clangd ${mb} MB`,
@@ -108,7 +114,7 @@ export const en = {
   // {example} is replaced with a <code> sample.
   'options.fontFamilyDesc': "A CSS font list, e.g. {example}. Leave empty to use the site's font.",
   'options.fontFamilyPlaceholder': 'Site default',
-  'options.toolbar': 'Toolbar',
+  'options.toolbar': 'Page buttons',
   'options.clangdBadge': 'clangd status badge',
   'options.clangdBadgeDesc': 'Show whether clangd is starting, ready or failed.',
   'options.slmBadge': 'AI status badge',
@@ -116,6 +122,8 @@ export const en = {
   'options.formatButton': 'Format button',
   'options.formatButtonDesc':
     'Format the code with clang-format in one click while formatting is on (Shift+Alt+F also works).',
+  'options.copyButton': 'Copy button',
+  'options.copyButtonDesc': 'Show a button at the top right of the question that copies it as Markdown.',
   'options.features': 'Language features',
   'options.featuresHint':
     'Powered by clangd, which runs inside your browser. Changes apply to open editors right away.',

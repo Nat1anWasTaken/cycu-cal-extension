@@ -58,9 +58,15 @@
       }
       #instruction {
         width: 35%;
-        padding: 12px;
-        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
         border-right: 1px solid #dee2e6;
+      }
+      #ins {
+        flex: 1 1 0%;
+        padding: 12px;
+        overflow-y: scroll;
       }
       #coderesult {
         flex: 1 1 0%;
@@ -122,8 +128,10 @@
       </div>
       <div class="wrap">
         <div id="instruction">
-          <h5>題目說明</h5>
-          <p>讀入兩個整數，輸出它們的和。前三行為鎖定區域，不可修改。</p>
+          <div id="ins">
+            <h5>題目說明</h5>
+            <p>讀入兩個整數，輸出它們的和。前三行為鎖定區域，不可修改。</p>
+          </div>
         </div>
         <div id="coderesult">
           <div id="coding">

@@ -1,4 +1,4 @@
-// Extension options page: feature toggles, editor look, toolbar controls, SLM model and clangd compile flags.
+// Extension options page: feature toggles, editor look, page buttons, SLM model and clangd compile flags.
 // Every change is saved immediately; the toast in #status confirms it.
 
 import { isBundled } from '../shared/bundle';
@@ -16,6 +16,7 @@ const fontFamily = $<HTMLInputElement>('fontFamily');
 const showClangdBadge = $<HTMLInputElement>('showClangdBadge');
 const showSlmBadge = $<HTMLInputElement>('showSlmBadge');
 const showFormatButton = $<HTMLInputElement>('showFormatButton');
+const showCopyButton = $<HTMLInputElement>('showCopyButton');
 const slmModel = $<HTMLDivElement>('slmModel');
 const slmContext = $<HTMLSpanElement>('slmContext');
 const compileFlags = $<HTMLTextAreaElement>('compileFlags');
@@ -61,6 +62,7 @@ function render(s: Settings): void {
   showClangdBadge.checked = s.showClangdBadge;
   showSlmBadge.checked = s.showSlmBadge;
   showFormatButton.checked = s.showFormatButton;
+  showCopyButton.checked = s.showCopyButton;
   radios.get(s.slmModel)!.checked = true;
   $<HTMLInputElement>(`slmContext-${s.slmContextTokens}`).checked = true;
   if (document.activeElement !== compileFlags) compileFlags.value = s.compileFlags.join('\n');
@@ -81,6 +83,7 @@ function read(): Partial<Settings> {
     showClangdBadge: showClangdBadge.checked,
     showSlmBadge: showSlmBadge.checked,
     showFormatButton: showFormatButton.checked,
+    showCopyButton: showCopyButton.checked,
     slmModel: selectedModel(),
     slmContextTokens: Number(
       slmContext.querySelector<HTMLInputElement>('input:checked')?.value ?? DEFAULT_SETTINGS.slmContextTokens,
