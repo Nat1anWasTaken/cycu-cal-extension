@@ -36,6 +36,8 @@ export interface Settings {
   showSlmBadge: boolean;
   /** Show a "Format" button in the page toolbar (only while formatting is on). */
   showFormatButton: boolean;
+  /** Show a "Copy" button at the top right of the question that copies it as Markdown. */
+  showCopyButton: boolean;
   slmModel: SlmModelId;
   /** Prompt budget for local AI completion; larger fits more code but responds slower. */
   slmContextTokens: SlmContextTokens;
@@ -66,6 +68,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showClangdBadge: true,
   showSlmBadge: true,
   showFormatButton: true,
+  showCopyButton: true,
   // An offline build defaults to the model it ships with.
   slmModel: BUNDLED_MODELS[0] ?? 'qwen2.5-coder-0.5b',
   slmContextTokens: 1536,

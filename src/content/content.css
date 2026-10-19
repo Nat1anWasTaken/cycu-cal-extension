@@ -37,7 +37,28 @@
 .cal-ext-toolbar .cal-ext-pill[data-state='error'] {
   background-color: #dc3545;
 }
+
+/* Question "Copy" button: floated so the first lines wrap around it, sticky so it stays at the top
+   right while the question (#ins) scrolls. */
+.cal-ext-copy {
+  position: sticky;
+  top: 0.25rem;
+  z-index: 3;
+  float: right;
+  margin: 0 0 0.25rem 0.5rem;
+}
+.cal-ext-copy .cal-ext-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+/* The outline button is transparent; keep the question text from showing through it. */
+.cal-ext-copy .cal-ext-btn:not(:hover):not(:active) {
+  background-color: var(--bs-body-bg, #fff);
+}
 .cal-ext-toolbar [hidden],
+.cal-ext-copy[hidden],
 .cal-monaco-host[hidden] {
   display: none !important;
 }

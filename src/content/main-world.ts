@@ -8,6 +8,7 @@
 import {
   BRIDGE_TAG,
   FLUSH_EVENT,
+  MATH_TEX_EVENT,
   type AceSnapshot,
   type BridgeEnvelope,
   type ContentToPage,
@@ -245,7 +246,22 @@ function waitForEditor(): void {
   tick();
 }
 
+/** Tags each MathJax 3 typeset formula with its TeX source (see MATH_TEX_EVENT). */
+function annotateMathTex(): void {
+  try {
+    const math = (window as any).MathJax?.startup?.document?.math;
+    if (!math || typeof math[Symbol.iterator] !== 'function') return;
+    for (const item of math) {
+      const root = item?.typesetRoot;
+      if (root instanceof HTMLElement && typeof item.math === 'string') root.dataset.calTex = item.math.trim();
+    }
+  } catch (err) {
+    console.warn('[cycu-cal-ext] cannot read MathJax', err);
+  }
+}
+
 if (!(window as any).__cycuCalExtMain) {
   (window as any).__cycuCalExtMain = true;
+  document.addEventListener(MATH_TEX_EVENT, annotateMathTex);
   waitForEditor();
 }

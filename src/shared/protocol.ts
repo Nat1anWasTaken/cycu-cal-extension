@@ -60,6 +60,13 @@ export interface BridgeEnvelope<T> {
  */
 export const FLUSH_EVENT = '__cycu_cal_ext_flush__';
 
+/**
+ * SYNCHRONOUS ISOLATED → MAIN request before copying the question as Markdown. The question's
+ * formulas are MathJax output, and only the page's MathJax knows their TeX source, so main-world
+ * answers by setting `data-cal-tex` on each typeset `mjx-container` before dispatchEvent() returns.
+ */
+export const MATH_TEX_EVENT = '__cycu_cal_ext_math_tex__';
+
 // ---------------------------------------------------------------------------
 // Content script → background (one-shot messages)
 // ---------------------------------------------------------------------------

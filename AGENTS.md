@@ -28,7 +28,7 @@ CI (`.github/workflows/build.yml`) runs `format:check`, `typecheck` and the thre
 
 ### Unit tests
 
-Unit tests run in plain Node with type stripping, with no bundler. Any module a test imports must have no runtime imports of Monaco, `chrome.*` or other browser-only code, and relative imports between such modules use explicit `.ts` extensions (for example `src/shared/i18n.ts`). Pure logic is kept in modules like this on purpose: `lsp/client.ts`, `lsp/features/convert.ts`, `slm/fim.ts` and `shared/i18n.ts`.
+Unit tests run in plain Node with type stripping, with no bundler. Any module a test imports must have no runtime imports of Monaco, `chrome.*` or other browser-only code, and relative imports between such modules use explicit `.ts` extensions (for example `src/shared/i18n.ts`). Pure logic is kept in modules like this on purpose: `lsp/client.ts`, `lsp/features/convert.ts`, `content/markdown.ts`, `slm/fim.ts` and `shared/i18n.ts`.
 
 ### E2E tests (macOS, Brave)
 
@@ -48,6 +48,7 @@ All cross-context message types live in `src/shared/protocol.ts`, so read that f
 1. **MAIN-world content script** (`src/content/main-world.ts`) talks to the page's own Ace instance. **Ace stays the source of truth**, because the site's RUN button, draft autosave, reset and locked lines all read or write Ace. The page declares top-level `let editor, Range, arr2, arrE`. These are global lexical bindings that are referenced by bare name, so never declare locals with those names in that file.
 2. **ISOLATED-world content script** (`src/content/index.ts`) loads settings and sets the UI locale, then dynamically imports `src/content/app.ts`, which mounts Monaco over the hidden Ace and wires up the toolbar, the lock guard, LSP and SLM. It talks to MAIN through `window.postMessage` envelopes tagged `BRIDGE_TAG`. If anything fails (no Ace, a timeout, Monaco fails to mount), it leaves the page untouched.
    - **Monaco → Ace sync** (`content/ace-sync.ts`) is debounced while typing, but it must be _synchronous_ before RUN, because the page reads `editor.getValue()` in the same task as the click. It dispatches a `FLUSH_EVENT` CustomEvent on `document` for this, since DOM events dispatch synchronously across worlds.
+   - **Copy question** (`content/copy-question.ts`) adds a "Copy" button to the question (`#ins`, the scrolling child of `#instruction`) that copies the title and statement as Markdown (`content/markdown.ts`). The formulas are MathJax output, so it first dispatches `MATH_TEX_EVENT`, and main-world tags each `mjx-container` with its TeX source.
    - **Locks** (`editor/locks.ts`) copy the site's Ace rule for locked regions exactly. Key events are intercepted, and as a safety net, content changes that touch a lock are reverted.
 3. **Background service worker** (`src/background.ts`) creates the offscreen document on request (`ensureOffscreen`) and opens the options page.
 4. **Offscreen document** (`src/offscreen/`) is cross-origin isolated (the manifest sets COOP/COEP) so that clangd can use pthreads. Content scripts connect to it directly over `chrome.runtime` Ports (`LSP_PORT`, `SLM_PORT`).

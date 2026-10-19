@@ -1,10 +1,12 @@
 // ISOLATED-world content script, loaded by index.ts once the UI locale is set: mounts Monaco over
-// the page's (hidden) Ace editor and wires the Ace bridge, lock guard, toolbar, LSP and SLM features.
+// the page's (hidden) Ace editor and wires the Ace bridge, lock guard, toolbar, question copy button,
+// LSP and SLM features.
 // If anything is off (no #editor, main-world reports `unavailable`, Monaco fails to mount) the page
 // is left untouched.
 
 import './content.css';
 import { createAceSync, type AceSync } from './ace-sync';
+import { createCopyQuestionButton } from './copy-question';
 import { applyEditorSettings, createEditor, createModel, getEditorWorkerState, monaco } from '../editor/monaco-setup';
 import { installLockGuard, isPositionLocked, type LockGuard } from '../editor/locks';
 import { createToolbar, type Toolbar, type ToolbarVisibility } from '../editor/toolbar';
@@ -231,6 +233,8 @@ export async function main(initialSettings: Settings): Promise<void> {
     },
   });
   toolbar.setVisible(toolbarVisibility(settings));
+  const copyButton = createCopyQuestionButton();
+  copyButton?.setVisible(settings.showCopyButton);
 
   function setMode(m: boolean, userInitiated: boolean): void {
     if (m) {
@@ -296,6 +300,7 @@ export async function main(initialSettings: Settings): Promise<void> {
     settings = next;
     if (next.useMonaco !== useMonaco) setMode(next.useMonaco, false);
     toolbar.setVisible(toolbarVisibility(next));
+    copyButton?.setVisible(next.showCopyButton);
     if (session) {
       session.setTheme(next);
       try {
