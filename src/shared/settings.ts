@@ -30,6 +30,8 @@ export interface Settings {
   minimap: boolean;
   /** CSS font-family list for the editor; empty uses the site's monospace font. */
   fontFamily: string;
+  /** Vim keybindings in Monaco, with a mode line under the editor. */
+  vimMode: boolean;
   /** Show the clangd status badge in the page toolbar. */
   showClangdBadge: boolean;
   /** Show the local AI status badge in the page toolbar (only while inline completion is on). */
@@ -65,6 +67,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'light',
   minimap: false,
   fontFamily: '',
+  vimMode: false,
   showClangdBadge: true,
   showSlmBadge: true,
   showFormatButton: true,

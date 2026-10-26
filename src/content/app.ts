@@ -10,6 +10,7 @@ import { createCopyQuestionButton } from './copy-question';
 import { applyEditorSettings, createEditor, createModel, getEditorWorkerState, monaco } from '../editor/monaco-setup';
 import { installLockGuard, isPositionLocked, type LockGuard } from '../editor/locks';
 import { createToolbar, type Toolbar, type ToolbarVisibility } from '../editor/toolbar';
+import { createVim, type VimController } from '../editor/vim';
 import { startLanguageFeatures, type LanguageFeatures } from '../lsp/index';
 import { startInlineCompletion, type InlineCompletion } from '../slm/inline-completion';
 import {
@@ -79,10 +80,11 @@ interface Session {
   model: monaco.editor.ITextModel;
   sync: AceSync;
   guard: LockGuard;
+  vim: VimController;
   lsp: LanguageFeatures | null;
   slm: InlineCompletion | null;
   setReadOnly(ro: boolean): void;
-  setTheme(s: Settings): void;
+  applySettings(s: Settings): void;
   show(visible: boolean): void;
 }
 
@@ -115,15 +117,23 @@ function mountSession(
 ): Session {
   const host = document.createElement('div');
   host.className = 'cal-monaco-host';
+  const editorEl = document.createElement('div');
+  editorEl.className = 'cal-monaco-editor';
+  const vimBar = document.createElement('div');
+  vimBar.className = 'cal-vim-bar';
+  vimBar.hidden = true;
+  host.append(editorEl, vimBar);
   aceEl.after(host);
   const place = positionHost(host, aceEl, coding);
 
   const safeTopic = topicId.replace(/[^\w-]/g, '_') || 'topic';
   const rand = Math.random().toString(36).slice(2, 8);
   const model = createModel(initialValue, `file:///workspace/${safeTopic}-${rand}.c`);
-  const ed = createEditor(host, model, settings, state.readOnly);
+  const ed = createEditor(editorEl, model, settings, state.readOnly);
   const sync = createAceSync(model);
-  const guard = installLockGuard(monaco, ed, state.locks);
+  // Before the lock guard, so Vim sees keys first: in normal mode they are commands, not edits.
+  const vim = createVim(ed, vimBar, () => sync.flush());
+  const guard = installLockGuard(monaco, ed, state.locks, vim.isCommandMode);
 
   ed.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
     sync.flush();
@@ -138,15 +148,17 @@ function mountSession(
     model,
     sync,
     guard,
+    vim,
     lsp: null,
     slm: null,
     setReadOnly(ro) {
       ed.updateOptions({ readOnly: ro });
       host.classList.toggle('cal-readonly', ro);
     },
-    setTheme(st) {
+    applySettings(st) {
       applyEditorSettings(ed, st);
       host.classList.toggle('cal-dark', st.theme === 'dark');
+      vim.setEnabled(st.vimMode);
     },
     show(visible) {
       host.hidden = !visible;
@@ -157,7 +169,7 @@ function mountSession(
     },
   };
   s.setReadOnly(state.readOnly);
-  s.setTheme(settings);
+  s.applySettings(settings);
 
   try {
     s.lsp = startLanguageFeatures({
@@ -179,7 +191,7 @@ function mountSession(
       editor: ed,
       model,
       settings,
-      isSuppressed: (pos) => state.readOnly || isPositionLocked(pos, guard.getLocks()),
+      isSuppressed: (pos) => state.readOnly || vim.isCommandMode() || isPositionLocked(pos, guard.getLocks()),
       onStatus: (st, progress, detail) => toolbar.setSlm(st, progress, detail),
     });
   } catch (err) {
@@ -302,7 +314,7 @@ export async function main(initialSettings: Settings): Promise<void> {
     toolbar.setVisible(toolbarVisibility(next));
     copyButton?.setVisible(next.showCopyButton);
     if (session) {
-      session.setTheme(next);
+      session.applySettings(next);
       try {
         session.lsp?.updateSettings(next);
       } catch (err) {

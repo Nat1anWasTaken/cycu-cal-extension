@@ -110,6 +110,9 @@ export const en = {
   'options.themeDark': 'Dark',
   'options.minimap': 'Minimap',
   'options.minimapDesc': 'Show a code overview along the right edge.',
+  'options.vimMode': 'Vim mode',
+  'options.vimModeDesc':
+    'Use Vim keybindings in the editor. A line under the editor shows the current mode and : commands.',
   'options.fontFamily': 'Font family',
   // {example} is replaced with a <code> sample.
   'options.fontFamilyDesc': "A CSS font list, e.g. {example}. Leave empty to use the site's font.",

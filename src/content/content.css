@@ -69,6 +69,12 @@
   z-index: 2;
   overflow: hidden;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+.cal-monaco-editor {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .cal-monaco-host .monaco-editor {
   /* Monaco renders CJK in the same mono stack as the site (var(--cal-font-mono)). */
@@ -95,4 +101,39 @@
 .cal-monaco-host.cal-dark .monaco-editor .cal-locked-line,
 .cal-monaco-host.cal-dark .monaco-editor .cal-locked-margin {
   background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Vim mode line (monaco-vim's status bar) under the editor. */
+.cal-vim-bar {
+  flex: none;
+  padding: 2px 8px;
+  font-family: var(--cal-font-mono, monospace);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: #333;
+  background-color: #f3f3f3;
+  border-top: 1px solid #ddd;
+}
+.cal-vim-bar input {
+  width: 50%;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+.cal-vim-bar .vim-notification {
+  margin-left: 1em;
+  color: #c4314b;
+}
+.cal-monaco-host.cal-dark .cal-vim-bar {
+  color: #ccc;
+  background-color: #252526;
+  border-top-color: #3c3c3c;
+}
+.cal-monaco-host.cal-dark .cal-vim-bar .vim-notification {
+  color: #f48771;
 }

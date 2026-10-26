@@ -12,6 +12,7 @@ const form = $<HTMLFormElement>('form');
 const featuresEl = $<HTMLElement>('features');
 const useMonaco = $<HTMLInputElement>('useMonaco');
 const minimap = $<HTMLInputElement>('minimap');
+const vimMode = $<HTMLInputElement>('vimMode');
 const fontFamily = $<HTMLInputElement>('fontFamily');
 const showClangdBadge = $<HTMLInputElement>('showClangdBadge');
 const showSlmBadge = $<HTMLInputElement>('showSlmBadge');
@@ -58,6 +59,7 @@ function render(s: Settings): void {
   useMonaco.checked = s.useMonaco;
   $<HTMLInputElement>(`theme-${s.theme}`).checked = true;
   minimap.checked = s.minimap;
+  vimMode.checked = s.vimMode;
   if (document.activeElement !== fontFamily) fontFamily.value = s.fontFamily;
   showClangdBadge.checked = s.showClangdBadge;
   showSlmBadge.checked = s.showSlmBadge;
@@ -79,6 +81,7 @@ function read(): Partial<Settings> {
     useMonaco: useMonaco.checked,
     theme: $<HTMLInputElement>('theme-dark').checked ? 'dark' : 'light',
     minimap: minimap.checked,
+    vimMode: vimMode.checked,
     fontFamily: fontFamily.value.trim(),
     showClangdBadge: showClangdBadge.checked,
     showSlmBadge: showSlmBadge.checked,

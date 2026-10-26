@@ -46,6 +46,14 @@ const common = {
     'process.env.NODE_ENV': JSON.stringify(watch ? 'development' : 'production'),
     __BUNDLED_MODELS__: JSON.stringify(bundledModels),
   },
+  resolve: {
+    alias: [
+      // monaco-vim's `browser` export is a UMD build that expects a global `monaco`; use its ES build instead.
+      { find: /^monaco-vim$/, replacement: join(root, 'node_modules/monaco-vim/dist/index.mjs') },
+      // monaco-vim imports `monaco-editor/esm/vs/<path>`, which the 0.57 exports map no longer resolves.
+      { find: /^monaco-editor\/esm\/vs\/(.*?)(\.js)?$/, replacement: 'monaco-editor/$1.js' },
+    ],
+  },
 };
 
 /** Extension pages + background + their (module) workers. */

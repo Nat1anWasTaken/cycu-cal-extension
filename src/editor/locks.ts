@@ -6,7 +6,8 @@
 // to start a new line below a locked block) is allowed.
 //
 // Enforcement layers in Monaco:
-//   1. keydown / beforeinput / paste / cut interception using the rule above (all cursors);
+//   1. keydown / beforeinput / paste / cut interception using the rule above (all cursors), skipped
+//      for keys while `keysAreCommands()` (Vim normal / visual mode);
 //   2. safety net: onDidChangeModelContent reverts any change whose replaced range touches a lock
 //      (covers commands, undo/redo, context-menu paste, drag & drop, multi-cursor, IME — deferred until the
 //      composition ends).
@@ -69,6 +70,7 @@ export function installLockGuard(
   monaco: typeof Monaco,
   ed: Monaco.editor.IStandaloneCodeEditor,
   initial: LockRange[],
+  keysAreCommands: () => boolean = () => false,
 ): LockGuard {
   const model = ed.getModel()!;
   let locks = initial.slice();
@@ -153,7 +155,7 @@ export function installLockGuard(
 
   disposables.push(
     ed.onKeyDown((e) => {
-      if (!locks.length || ed.getOption(monaco.editor.EditorOption.readOnly)) return;
+      if (!locks.length || ed.getOption(monaco.editor.EditorOption.readOnly) || keysAreCommands()) return;
       const be = e.browserEvent;
       const mod = be.ctrlKey || be.metaKey;
       const printable = be.key.length === 1 && !mod;

@@ -531,6 +531,65 @@ try {
   await sleep(300);
   check('settings useMonaco=true → Monaco back', await page(`!document.querySelector('.cal-monaco-host').hidden`));
 
+  // ---- 9c. Vim mode -------------------------------------------------------------------
+  const vimKey = (
+    ch,
+    { code = `Key${ch.toUpperCase()}`, keyCode = ch.toUpperCase().charCodeAt(0), modifiers = 0 } = {},
+  ) => key(ch, { code, keyCode, modifiers, text: ch });
+  const vimBar = () => page(`document.querySelector('.cal-vim-bar')?.textContent ?? null`);
+  const cursorLine = () => ext('__calExt.session.editor.getPosition().lineNumber');
+  await setSettings({ vimMode: true });
+  await sleep(300);
+  check(
+    'vimMode=true → mode line shows NORMAL',
+    (await vimBar())?.includes('--NORMAL--') &&
+      (await page(`!document.querySelector('.cal-vim-bar').hidden`)) &&
+      (await ext(`__calExt.session.editor.getOption(__calExt.monaco.editor.EditorOption.cursorStyle)`)) === 2,
+    await vimBar(),
+  );
+  const vim0 = await model();
+  await focusAt(1, 1);
+  await vimKey('j');
+  await sleep(50);
+  check('vim: j moves the cursor inside a lock', (await cursorLine()) === 2 && (await model()) === vim0);
+  await vimKey('d');
+  await vimKey('d');
+  await sleep(100);
+  check('vim: dd inside a lock is reverted', (await model()) === vim0);
+  await focusAt(5, 1);
+  await vimKey('x');
+  await sleep(200);
+  const vim1 = await model();
+  check('vim: x deletes outside a lock, synced to Ace', vim1.length === vim0.length - 1 && (await ace()) === vim1);
+  await vimKey('i');
+  await sleep(50);
+  const insertBar = await vimBar();
+  await shot('/tmp/cal-page-vim.png');
+  await insertText('V');
+  await key('Escape', { keyCode: 27 });
+  await sleep(200);
+  check(
+    'vim: i inserts text, Escape returns to NORMAL',
+    insertBar.includes('--INSERT--') &&
+      (await model()) === vim0.replace(/^((?:.*\n){4})./, '$1V') &&
+      (await vimBar()).includes('--NORMAL--'),
+    JSON.stringify([insertBar, (await model()).split('\n')[4]]),
+  );
+  await vimKey(':', { code: 'Semicolon', keyCode: 186, modifiers: 8 });
+  await sleep(50);
+  const prompt = await page(`document.activeElement?.closest('.cal-vim-bar') ? true : false`);
+  await insertText('w');
+  await key('Enter', { keyCode: 13, text: '\r' });
+  await sleep(100);
+  check('vim: :w prompt opens in the mode line and closes', prompt && (await ace()) === (await model()));
+  await setSettings({ vimMode: false });
+  await sleep(300);
+  check(
+    'vimMode=false → mode line hidden, line cursor back',
+    (await page(`document.querySelector('.cal-vim-bar').hidden`)) &&
+      (await ext(`__calExt.session.editor.getOption(__calExt.monaco.editor.EditorOption.cursorStyle)`)) === 1,
+  );
+
   // ---- 10. ?passed=1 read-only -------------------------------------------------------
   await navigate(`${BASE}?passed=1`);
   const ro = await ext(`__calExt.session.editor.getOption(__calExt.monaco.editor.EditorOption.readOnly)`);

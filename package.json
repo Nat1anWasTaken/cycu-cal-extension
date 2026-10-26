@@ -20,6 +20,7 @@
   "dependencies": {
     "@wllama/wllama": "^3.8.1",
     "monaco-editor": "^0.57.0",
+    "monaco-vim": "0.4.4",
     "vscode-languageserver-protocol": "^3.18.4"
   },
   "devDependencies": {

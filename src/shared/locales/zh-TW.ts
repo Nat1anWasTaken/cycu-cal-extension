@@ -111,6 +111,8 @@ export const zhTW: Messages = {
   'options.themeDark': '深色',
   'options.minimap': '程式碼縮圖',
   'options.minimapDesc': '在編輯器右側顯示整份程式碼的縮小預覽，方便快速捲動。',
+  'options.vimMode': 'Vim 模式',
+  'options.vimModeDesc': '在編輯器中使用 Vim 的按鍵操作。編輯器下方會顯示目前的模式和 : 指令。',
   'options.fontFamily': '字型',
   'options.fontFamilyDesc': '想使用的字型名稱，可用逗號分隔多個，例如 {example}。留空則使用網站預設字型。',
   'options.fontFamilyPlaceholder': '網站預設字型',
