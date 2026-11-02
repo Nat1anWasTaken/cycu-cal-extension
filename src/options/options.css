@@ -345,6 +345,22 @@ input[type='text']:focus {
 input[type='text'] {
   line-height: 1.4;
 }
+
+/* Choices too many or too long for a segmented control */
+.row select {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 13px;
+  cursor: pointer;
+}
+.row select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
 .desc code {
   font-family: var(--mono);
   font-size: 12px;

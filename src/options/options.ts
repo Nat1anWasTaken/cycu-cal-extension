@@ -14,6 +14,7 @@ const featuresEl = $<HTMLElement>('features');
 const useMonaco = $<HTMLInputElement>('useMonaco');
 const minimap = $<HTMLInputElement>('minimap');
 const vimMode = $<HTMLInputElement>('vimMode');
+const editorTheme = $<HTMLSelectElement>('editorTheme');
 const fontFamily = $<HTMLInputElement>('fontFamily');
 const showClangdBadge = $<HTMLInputElement>('showClangdBadge');
 const showSlmBadge = $<HTMLInputElement>('showSlmBadge');
@@ -59,7 +60,7 @@ function render(s: Settings): void {
   $<HTMLInputElement>(`language-${s.language}`).checked = true;
   useMonaco.checked = s.useMonaco;
   $<HTMLInputElement>(`theme-${s.theme}`).checked = true;
-  $<HTMLInputElement>(`editorTheme-${s.editorTheme}`).checked = true;
+  editorTheme.value = s.editorTheme;
   minimap.checked = s.minimap;
   vimMode.checked = s.vimMode;
   if (document.activeElement !== fontFamily) fontFamily.value = s.fontFamily;
@@ -83,8 +84,7 @@ function read(): Partial<Settings> {
     useMonaco: useMonaco.checked,
     theme: (form.querySelector<HTMLInputElement>('input[name=theme]:checked')?.value ??
       DEFAULT_SETTINGS.theme) as ThemeSetting,
-    editorTheme: (form.querySelector<HTMLInputElement>('input[name=editorTheme]:checked')?.value ??
-      DEFAULT_SETTINGS.editorTheme) as EditorThemeSetting,
+    editorTheme: editorTheme.value as EditorThemeSetting,
     minimap: minimap.checked,
     vimMode: vimMode.checked,
     fontFamily: fontFamily.value.trim(),
