@@ -1,0 +1,281 @@
+/* Dark theme for every /cal/* page. theme.ts sets html[data-cal-theme] (and data-bs-theme, which darkens Bootstrap's
+   own components); the rules below cover the colors the site hardcodes outside Bootstrap. Every selector starts with
+   html[data-cal-theme='dark'] so it outranks the site's sheets, which load after this one. */
+
+html[data-cal-theme='dark'] {
+  color-scheme: dark;
+  --cal-dk-bg: #17181b;
+  --cal-dk-surface: #1e1f22;
+  --cal-dk-raised: #2a2c30;
+  --cal-dk-hover: #34373c;
+  --cal-dk-border: #3a3d42;
+  --cal-dk-text: #d7dade;
+  --cal-dk-muted: #9aa1a9;
+  --cal-dk-link: #6cb6ff;
+  --cal-dk-accent: #4ac24d;
+
+  --bs-body-bg: var(--cal-dk-bg);
+  --bs-body-bg-rgb: 23, 24, 27;
+  --bs-body-color: var(--cal-dk-text);
+  --bs-body-color-rgb: 215, 218, 222;
+  --bs-border-color: var(--cal-dk-border);
+  --bs-secondary-bg: var(--cal-dk-raised);
+  --bs-tertiary-bg: var(--cal-dk-surface);
+  --bs-link-color: var(--cal-dk-link);
+  --bs-link-color-rgb: 108, 182, 255;
+  --swal2-background: var(--cal-dk-surface);
+  --swal2-color: var(--cal-dk-text);
+}
+
+/* Page chrome */
+html[data-cal-theme='dark'] body {
+  background: var(--cal-dk-bg);
+  color: var(--cal-dk-text);
+}
+html[data-cal-theme='dark'] #left {
+  background-color: var(--cal-dk-surface);
+  color: var(--cal-dk-text);
+}
+html[data-cal-theme='dark'] .tab:hover,
+html[data-cal-theme='dark'] .tab:active {
+  color: var(--cal-dk-accent);
+  border-bottom-color: var(--cal-dk-accent);
+}
+html[data-cal-theme='dark'] #content,
+html[data-cal-theme='dark'] nav {
+  background: var(--cal-dk-surface);
+  border-color: var(--cal-dk-border);
+}
+html[data-cal-theme='dark'] nav .selected {
+  color: #fff;
+}
+html[data-cal-theme='dark'] a:not(.btn) {
+  color: var(--cal-dk-link);
+}
+html[data-cal-theme='dark'] table,
+html[data-cal-theme='dark'] td,
+html[data-cal-theme='dark'] th {
+  border-color: var(--cal-dk-border);
+}
+
+/* Topic page labels. The site's text color, rgb(from var(--bg) calc(1 - r) ...), clamps to black for any --bg
+   (channels are 0-255 there), so the color is set explicitly. */
+html[data-cal-theme='dark'] #topic_instruction {
+  --bg: var(--cal-dk-raised);
+  color: var(--cal-dk-text);
+  border-color: var(--cal-dk-border);
+}
+html[data-cal-theme='dark'] #notice {
+  --bg: #1d2b24;
+  color: #8fd6a4;
+  border-color: #2f4a37;
+}
+html[data-cal-theme='dark'] #ins {
+  background-color: var(--cal-dk-surface);
+  border-color: var(--cal-dk-border);
+}
+html[data-cal-theme='dark'] #editor {
+  border-color: var(--cal-dk-border);
+}
+html[data-cal-theme='dark'] .split-divider,
+html[data-cal-theme='dark'] .split-divider-h:not(.terminal-collapsed) {
+  background-color: var(--cal-dk-raised);
+  border-color: var(--cal-dk-border);
+}
+html[data-cal-theme='dark'] .split-divider::after,
+html[data-cal-theme='dark'] .split-divider-h::after {
+  color: var(--cal-dk-muted);
+}
+html[data-cal-theme='dark'] .split-divider:hover,
+html[data-cal-theme='dark'] .split-divider.dragging,
+html[data-cal-theme='dark'] .split-divider-h:hover,
+html[data-cal-theme='dark'] .split-divider-h.dragging {
+  background-color: #117c13;
+}
+
+/* Leaderboard (complete_rank_list): mostly --lb-* variables, plus a few hardcoded backgrounds */
+html[data-cal-theme='dark'] #leaderboard {
+  --lb-ink: var(--cal-dk-text);
+  --lb-muted: var(--cal-dk-muted);
+  --lb-faint: #7d848c;
+  --lb-line: var(--cal-dk-border);
+  --lb-hover: var(--cal-dk-raised);
+  --lb-brand: var(--cal-dk-accent);
+  --lb-brand-soft: #1c2b1d;
+  --lb-down: #ef6b5b;
+  background: var(--cal-dk-surface);
+}
+html[data-cal-theme='dark'] #leaderboard .lb-course,
+html[data-cal-theme='dark'] #leaderboard .lb-search input {
+  background: var(--cal-dk-bg);
+}
+html[data-cal-theme='dark'] #leaderboard .lb-pill {
+  background: var(--cal-dk-hover);
+}
+html[data-cal-theme='dark'] #leaderboard tbody tr.lb-t1 td {
+  background: #2e2817;
+}
+html[data-cal-theme='dark'] #leaderboard tbody tr.lb-t1:hover td {
+  background: #3a321b;
+}
+html[data-cal-theme='dark'] #leaderboard tbody tr.lb-t1 td.lb-id {
+  color: #f0c95a;
+}
+html[data-cal-theme='dark'] #leaderboard tbody tr.lb-me:hover td {
+  background: #223524;
+}
+
+/* Markdown (MarkDownStyle.css and the page's inline styles). The result terminal is a pre that is already dark. */
+html[data-cal-theme='dark'] pre:not(.terminal-textarea) {
+  background-color: var(--cal-dk-raised);
+  color: var(--cal-dk-text);
+}
+html[data-cal-theme='dark'] code:not([class]) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+html[data-cal-theme='dark'] blockquote,
+html[data-cal-theme='dark'] quote {
+  background-color: transparent;
+  color: var(--cal-dk-muted);
+  border-left-color: var(--cal-dk-border);
+}
+
+/* highlight.js: Tomorrow Night in place of the site's Tomorrow */
+html[data-cal-theme='dark'] .hljs {
+  background: var(--cal-dk-raised);
+  color: #c5c8c6;
+}
+html[data-cal-theme='dark'] .hljs-comment,
+html[data-cal-theme='dark'] .hljs-quote {
+  color: #969896;
+}
+html[data-cal-theme='dark'] .hljs-variable,
+html[data-cal-theme='dark'] .hljs-template-variable,
+html[data-cal-theme='dark'] .hljs-tag,
+html[data-cal-theme='dark'] .hljs-name,
+html[data-cal-theme='dark'] .hljs-selector-id,
+html[data-cal-theme='dark'] .hljs-selector-class,
+html[data-cal-theme='dark'] .hljs-regexp,
+html[data-cal-theme='dark'] .hljs-deletion {
+  color: #cc6666;
+}
+html[data-cal-theme='dark'] .hljs-number,
+html[data-cal-theme='dark'] .hljs-built_in,
+html[data-cal-theme='dark'] .hljs-literal,
+html[data-cal-theme='dark'] .hljs-type,
+html[data-cal-theme='dark'] .hljs-params,
+html[data-cal-theme='dark'] .hljs-meta,
+html[data-cal-theme='dark'] .hljs-link {
+  color: #de935f;
+}
+html[data-cal-theme='dark'] .hljs-attribute {
+  color: #f0c674;
+}
+html[data-cal-theme='dark'] .hljs-string,
+html[data-cal-theme='dark'] .hljs-symbol,
+html[data-cal-theme='dark'] .hljs-bullet,
+html[data-cal-theme='dark'] .hljs-addition {
+  color: #b5bd68;
+}
+html[data-cal-theme='dark'] .hljs-title,
+html[data-cal-theme='dark'] .hljs-section {
+  color: #81a2be;
+}
+html[data-cal-theme='dark'] .hljs-keyword,
+html[data-cal-theme='dark'] .hljs-selector-tag {
+  color: #b294bb;
+}
+
+/* dropdown-menu.css */
+html[data-cal-theme='dark'] .dropdown-content {
+  background-color: var(--cal-dk-raised);
+}
+html[data-cal-theme='dark'] .dropdown-content a {
+  color: var(--cal-dk-text);
+}
+html[data-cal-theme='dark'] .dropdown-content a:hover {
+  background-color: var(--cal-dk-hover);
+}
+
+/* Output diff panels outside the (already dark) terminal: same colors terminal_result.css uses inside it */
+html[data-cal-theme='dark'] .diff-panel,
+html[data-cal-theme='dark'] .diff-panel-head {
+  border-color: #444;
+}
+html[data-cal-theme='dark'] .diff-line-bad {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+html[data-cal-theme='dark'] .diff-col-n {
+  color: #777;
+}
+html[data-cal-theme='dark'] .diff-mark {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+html[data-cal-theme='dark'] .diff-note {
+  color: #f0c674;
+}
+
+/* MathJax context menu */
+html[data-cal-theme='dark'] .CtxtMenu_Menu,
+html[data-cal-theme='dark'] .CtxtMenu_Info {
+  background-color: var(--cal-dk-raised);
+  color: var(--cal-dk-text);
+  border-color: var(--cal-dk-border);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+html[data-cal-theme='dark'] .CtxtMenu_InfoContent {
+  background-color: var(--cal-dk-surface);
+}
+
+/* Ace, for when Monaco is off or not mounted yet. The site paints passed topics' editor background inline. */
+html[data-cal-theme='dark'] .ace-dreamweaver {
+  background-color: var(--cal-dk-surface) !important;
+  color: var(--cal-dk-text);
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_gutter {
+  background: var(--cal-dk-raised) !important;
+  color: var(--cal-dk-muted);
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_scroller {
+  background-color: transparent !important;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_gutter-active-line {
+  background-color: var(--cal-dk-hover) !important;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_marker-layer .ace_active-line {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_marker-layer .ace_selection {
+  background: #264f78;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_marker-layer .ace_bracket {
+  border-color: #888;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_cursor {
+  color: var(--cal-dk-text);
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_print-margin {
+  background: var(--cal-dk-border);
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_keyword,
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_storage {
+  color: #569cd6;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_string {
+  color: #ce9178;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_comment {
+  color: #6a9955;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_constant,
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_constant.ace_numeric {
+  color: #b5cea8;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_support.ace_function {
+  color: #dcdcaa;
+}
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_variable,
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_paren,
+html[data-cal-theme='dark'] .ace-dreamweaver .ace_punctuation {
+  color: var(--cal-dk-text);
+}

@@ -2,11 +2,11 @@
 // and the model exist, forwards settings changes to updateSettings(), and merges
 // semanticTokenRules() into its theme:
 //
-//   monaco.editor.defineTheme('cal-light', {
+//   monaco.editor.defineTheme('cal-vs', {
 //     base: 'vs', inherit: true, colors: {},
 //     rules: [...ownRules, ...semanticTokenRules('light')],
 //   });
-//   // and 'cal-dark' with base 'vs-dark' + semanticTokenRules('dark');
+//   // and the same for each other built-in theme, with 'dark' rules for vs-dark / hc-black;
 //   // editor option 'semanticHighlighting.enabled': true
 //
 // Rule tokens are clangd semantic token types ('function', 'macro', 'parameter', ...). The

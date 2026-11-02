@@ -3,6 +3,7 @@
 import { BUNDLED_MODELS } from './bundle';
 import { LOCALES, type LanguageSetting } from './i18n';
 import { SLM_CONTEXT_SIZES, type SlmContextTokens, type SlmModelId } from './protocol';
+import { EDITOR_THEME_SETTINGS, THEME_SETTINGS, type EditorThemeSetting, type ThemeSetting } from './theme';
 
 export type FeatureId =
   | 'diagnostics'
@@ -26,7 +27,10 @@ export interface Settings {
   useMonaco: boolean;
   features: Record<FeatureId, boolean>;
   compileFlags: string[];
-  theme: 'light' | 'dark';
+  /** Colors of the site's pages; 'auto' follows the system color scheme. */
+  theme: ThemeSetting;
+  /** Monaco's theme: a built-in theme, or 'page' to follow `theme`. */
+  editorTheme: EditorThemeSetting;
   minimap: boolean;
   /** CSS font-family list for the editor; empty uses the site's monospace font. */
   fontFamily: string;
@@ -64,7 +68,8 @@ export const DEFAULT_SETTINGS: Settings = {
     inlineCompletion: false,
   },
   compileFlags: ['-xc', '-std=gnu11', '-Wall', '-Wextra'],
-  theme: 'light',
+  theme: 'auto',
+  editorTheme: 'page',
   minimap: false,
   fontFamily: '',
   vimMode: false,
@@ -106,6 +111,8 @@ function mergeSettings(raw: Partial<Settings> | undefined): Settings {
     features: { ...DEFAULT_SETTINGS.features, ...raw?.features },
   };
   if (s.language !== 'auto' && !(s.language in LOCALES)) s.language = DEFAULT_SETTINGS.language;
+  if (!THEME_SETTINGS.includes(s.theme)) s.theme = DEFAULT_SETTINGS.theme;
+  if (!EDITOR_THEME_SETTINGS.includes(s.editorTheme)) s.editorTheme = DEFAULT_SETTINGS.editorTheme;
   if (!SLM_CONTEXT_SIZES.includes(s.slmContextTokens)) s.slmContextTokens = DEFAULT_SETTINGS.slmContextTokens;
   return s;
 }

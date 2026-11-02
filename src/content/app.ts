@@ -7,7 +7,14 @@
 import './content.css';
 import { createAceSync, type AceSync } from './ace-sync';
 import { createCopyQuestionButton } from './copy-question';
-import { applyEditorSettings, createEditor, createModel, getEditorWorkerState, monaco } from '../editor/monaco-setup';
+import {
+  applyEditorSettings,
+  createEditor,
+  createModel,
+  getEditorWorkerState,
+  monaco,
+  editorThemeFor,
+} from '../editor/monaco-setup';
 import { installLockGuard, isPositionLocked, type LockGuard } from '../editor/locks';
 import { createToolbar, type Toolbar, type ToolbarVisibility } from '../editor/toolbar';
 import { createVim, type VimController } from '../editor/vim';
@@ -22,6 +29,7 @@ import {
   type PageToContent,
 } from '../shared/protocol';
 import { onSettingsChanged, saveSettings, type Settings } from '../shared/settings';
+import { DARK_QUERY, isDarkEditorTheme } from '../shared/theme';
 
 const INIT_TIMEOUT_MS = 25_000;
 
@@ -157,7 +165,7 @@ function mountSession(
     },
     applySettings(st) {
       applyEditorSettings(ed, st);
-      host.classList.toggle('cal-dark', st.theme === 'dark');
+      host.classList.toggle('cal-dark', isDarkEditorTheme(editorThemeFor(st)));
       vim.setEnabled(st.vimMode);
     },
     show(visible) {
@@ -326,6 +334,11 @@ export async function main(initialSettings: Settings): Promise<void> {
         console.error(LOG, 'inline completion updateSettings failed', err);
       }
     }
+  });
+
+  // 'auto' follows the system color scheme while the page is open.
+  matchMedia(DARK_QUERY).addEventListener('change', () => {
+    if (settings.theme === 'auto') session?.applySettings(settings);
   });
 
   setMode(settings.useMonaco, false);

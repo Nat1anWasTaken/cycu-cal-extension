@@ -16,6 +16,12 @@
   },
   "content_scripts": [
     {
+      "matches": ["*://*/cal/*", "*://*/users/changePW/*"],
+      "js": ["theme.js"],
+      "css": ["theme.css"],
+      "run_at": "document_start"
+    },
+    {
       "matches": ["*://*/cal/topic/*"],
       "js": ["main-world.js"],
       "world": "MAIN",

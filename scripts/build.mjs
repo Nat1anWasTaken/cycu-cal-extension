@@ -179,6 +179,7 @@ writeLocales();
 
 const iifeEntries = [
   ['main-world', 'src/content/main-world.ts'],
+  ['theme', 'src/content/theme.ts'],
   ['content', 'src/content/index.ts'],
   ['editor.worker', 'node_modules/monaco-editor/esm/vs/editor/editor.worker.js'],
 ];

@@ -57,6 +57,7 @@ import { conf as cppConf, language as cppLanguage } from 'monaco-editor/language
 
 import { semanticTokenRules } from '../lsp/index';
 import type { Settings } from '../shared/settings';
+import { DARK_QUERY, isDarkEditorTheme, resolveEditorTheme, resolveTheme, type EditorTheme } from '../shared/theme';
 
 export { monaco };
 export type MonacoNS = typeof monaco;
@@ -106,18 +107,26 @@ function setupOnce(): void {
     monaco.languages.setLanguageConfiguration(id, cppConf);
   }
 
-  // Built-in themes plus colours for clangd's semantic token types.
-  monaco.editor.defineTheme('cal-light', { base: 'vs', inherit: true, colors: {}, rules: semanticTokenRules('light') });
-  monaco.editor.defineTheme('cal-dark', {
-    base: 'vs-dark',
-    inherit: true,
-    colors: {},
-    rules: semanticTokenRules('dark'),
-  });
+  // Each built-in theme as is, plus colours for clangd's semantic token types (which the built-ins don't cover).
+  for (const base of EDITOR_THEMES) {
+    monaco.editor.defineTheme(`cal-${base}`, {
+      base,
+      inherit: true,
+      colors: {},
+      rules: semanticTokenRules(isDarkEditorTheme(base) ? 'dark' : 'light'),
+    });
+  }
 }
 
-export function themeFor(settings: Settings): string {
-  return settings.theme === 'dark' ? 'cal-dark' : 'cal-light';
+const EDITOR_THEMES: readonly EditorTheme[] = ['vs', 'vs-dark', 'hc-light', 'hc-black'];
+
+/** The built-in theme the editor uses: `editorTheme`, or vs / vs-dark matching the page theme. */
+export function editorThemeFor(settings: Settings): EditorTheme {
+  return resolveEditorTheme(settings.editorTheme, resolveTheme(settings.theme, matchMedia(DARK_QUERY).matches));
+}
+
+function themeFor(settings: Settings): string {
+  return `cal-${editorThemeFor(settings)}`;
 }
 
 /** The user's fonts first, then the site's mono stack (which also covers CJK). */

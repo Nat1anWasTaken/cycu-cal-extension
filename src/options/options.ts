@@ -5,6 +5,7 @@ import { isBundled } from '../shared/bundle';
 import { getLocale, localeFor, setLocale, t, type LanguageSetting, type MessageKey } from '../shared/i18n';
 import { SLM_CONTEXT_SIZES, SLM_MODELS, type SlmContextTokens, type SlmModelId } from '../shared/protocol';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, type FeatureId, type Settings } from '../shared/settings';
+import type { EditorThemeSetting, ThemeSetting } from '../shared/theme';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -58,6 +59,7 @@ function render(s: Settings): void {
   $<HTMLInputElement>(`language-${s.language}`).checked = true;
   useMonaco.checked = s.useMonaco;
   $<HTMLInputElement>(`theme-${s.theme}`).checked = true;
+  $<HTMLInputElement>(`editorTheme-${s.editorTheme}`).checked = true;
   minimap.checked = s.minimap;
   vimMode.checked = s.vimMode;
   if (document.activeElement !== fontFamily) fontFamily.value = s.fontFamily;
@@ -79,7 +81,10 @@ function read(): Partial<Settings> {
     language: (form.querySelector<HTMLInputElement>('input[name=language]:checked')?.value ??
       DEFAULT_SETTINGS.language) as LanguageSetting,
     useMonaco: useMonaco.checked,
-    theme: $<HTMLInputElement>('theme-dark').checked ? 'dark' : 'light',
+    theme: (form.querySelector<HTMLInputElement>('input[name=theme]:checked')?.value ??
+      DEFAULT_SETTINGS.theme) as ThemeSetting,
+    editorTheme: (form.querySelector<HTMLInputElement>('input[name=editorTheme]:checked')?.value ??
+      DEFAULT_SETTINGS.editorTheme) as EditorThemeSetting,
     minimap: minimap.checked,
     vimMode: vimMode.checked,
     fontFamily: fontFamily.value.trim(),
