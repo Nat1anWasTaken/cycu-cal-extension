@@ -518,7 +518,56 @@ try {
     `(() => ({ dark: !!document.querySelector('.cal-monaco-host .monaco-editor.vs-dark'), minimap: !!document.querySelector('.cal-monaco-host .minimap canvas') }))()`,
   );
   check('settings change → dark theme + minimap live', dark.dark && dark.minimap, JSON.stringify(dark));
+  const pageTheme = () =>
+    page(`(() => ({
+      cal: document.documentElement.dataset.calTheme ?? null,
+      bs: document.documentElement.dataset.bsTheme ?? null,
+      body: getComputedStyle(document.body).backgroundColor,
+      ins: getComputedStyle(document.getElementById('ins')).backgroundColor,
+      cache: localStorage.getItem('cal-ext-theme'),
+    }))()`);
+  const darkPage = await pageTheme();
+  check(
+    'theme=dark → page dark (data-cal-theme, data-bs-theme, panels, cache)',
+    darkPage.cal === 'dark' &&
+      darkPage.bs === 'dark' &&
+      darkPage.body === 'rgb(23, 24, 27)' &&
+      darkPage.ins === 'rgb(30, 31, 34)' &&
+      darkPage.cache === 'dark',
+    JSON.stringify(darkPage),
+  );
   await shot('/tmp/cal-page-dark.png');
+  await setSettings({ editorTheme: 'hc-light' });
+  await sleep(300);
+  const split = await page(`(() => ({
+    hcLight: !!document.querySelector('.cal-monaco-host .monaco-editor.hc-light'),
+    hostDark: document.querySelector('.cal-monaco-host').classList.contains('cal-dark'),
+    page: document.documentElement.dataset.calTheme,
+  }))()`);
+  check(
+    'editorTheme=hc-light on a dark page → built-in hc-light editor, page stays dark',
+    split.hcLight && !split.hostDark && split.page === 'dark',
+    JSON.stringify(split),
+  );
+  await setSettings({ editorTheme: 'page' });
+  await sleep(300);
+  // A reload applies the cached theme at document_start, before settings are read.
+  const early = new Promise((ok) => cdp.on('Page.domContentEventFired', (_p, s) => s === sid && ok()));
+  await S('Page.reload');
+  await early;
+  await waitFor(() => ext('!!globalThis.__calExt?.session'), { label: 'Monaco session', timeout: 20000 });
+  check('reload keeps the page dark', (await pageTheme()).cal === 'dark');
+  await setSettings({ theme: 'light' });
+  await sleep(300);
+  const lightPage = await pageTheme();
+  check(
+    'theme=light → page light again, live',
+    lightPage.cal === 'light' &&
+      lightPage.bs === null &&
+      lightPage.cache === 'light' &&
+      !(await page(`!!document.querySelector('.cal-monaco-host .monaco-editor.vs-dark')`)),
+    JSON.stringify(lightPage),
+  );
   await setSettings({ theme: 'light', minimap: false, useMonaco: false });
   await sleep(300);
   check(
